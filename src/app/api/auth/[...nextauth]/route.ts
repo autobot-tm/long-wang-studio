@@ -1,1 +1,1 @@
-export const { GET, POST } = (await import('@/libs/auth')).handlers;
+export { GET, POST } from '@/libs/auth';

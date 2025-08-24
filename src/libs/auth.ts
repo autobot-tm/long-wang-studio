@@ -1,18 +1,18 @@
-import NextAuth from 'next-auth';
+import NextAuth, { type NextAuthOptions } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
+export const authOptions: NextAuthOptions = {
     session: { strategy: 'jwt' },
     providers: [
         Credentials({
             name: 'Credentials',
-            credentials: { username: {}, password: {} },
+            credentials: {
+                username: { label: 'Username', type: 'text' },
+                password: { label: 'Password', type: 'password' },
+            },
             async authorize(creds) {
                 // TODO: replace call API fact
-                if (
-                    creds?.username === 'admin' &&
-                    creds?.password === '123456'
-                ) {
+                if (creds?.username === 'admin' && creds?.password === '123') {
                     return {
                         id: '1',
                         name: 'Admin',
@@ -34,4 +34,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             return session;
         },
     },
-});
+};
+
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
