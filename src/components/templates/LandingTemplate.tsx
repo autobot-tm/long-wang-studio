@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useState } from 'react';
 import Logo from '../atoms/Logo';
+import { Button } from '../ui/button';
 
 const CanvasFrame = dynamic(
     () => import('@/components/organisms/CanvasFrame'),
@@ -42,7 +43,15 @@ export default function LandingTemplate() {
                 </p>
 
                 <div className='mt-10 shadow-xl border border-amber-200'>
-                    <CanvasFrame
+                    <Image
+                        src='/images/landing-page-frame-preview.png'
+                        alt='Demo'
+                        width={800}
+                        height={800}
+                        className='object-cover'
+                        priority
+                    />
+                    {/* <CanvasFrame
                         width={800}
                         height={800}
                         frameSrc='/images/frame.png'
@@ -55,7 +64,17 @@ export default function LandingTemplate() {
                             { x: 110, y: 230, width: 260, height: 340 },
                             { x: 450, y: 180, width: 260, height: 340 },
                         ]}
-                    />
+                    /> */}
+                </div>
+
+                <div className='flex gap-6 mt-16'>
+                    <Button
+                        variant='cta'
+                        size='xl'
+                        className='w-full text-[40px] leading-none tracking-tight font-extrabold'
+                    >
+                        Bắt đầu tạo
+                    </Button>
                 </div>
 
                 {/* <div className='flex gap-6 mt-8'>
