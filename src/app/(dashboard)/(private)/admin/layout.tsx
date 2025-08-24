@@ -1,11 +1,11 @@
-import AuthGuard from '@/components/templates/AuthGuard';
-import { SessionProvider } from 'next-auth/react';
+import Provider from '@/components/providers';
+import AuthGuard from '@/hocs/AuthGuard';
 
 const Layout = async ({ children }: { children: React.ReactNode }) => {
     return (
-        <SessionProvider>
+        <Provider>
             <AuthGuard>{children}</AuthGuard>
-        </SessionProvider>
+        </Provider>
     );
 };
 
