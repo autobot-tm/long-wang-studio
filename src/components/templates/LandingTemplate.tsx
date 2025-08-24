@@ -1,38 +1,77 @@
 'use client';
-import { Button } from '@/components/ui/button';
+
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import { useState } from 'react';
+import Logo from '../atoms/Logo';
+
+const CanvasFrame = dynamic(
+    () => import('@/components/organisms/CanvasFrame'),
+    { ssr: false }
+);
 
 export default function LandingTemplate() {
-    const bgDesktop = '/images/landing-background.png';
+    const [photo1, setPhoto1] = useState<string | null>(null);
+    const [photo2, setPhoto2] = useState<string | null>(null);
 
     return (
-        <section className='relative min-h-dvh w-full overflow-hidden'>
+        <section className='relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden'>
             <Image
-                src={bgDesktop}
-                alt=''
+                src='/images/landing-background.png'
+                alt='Background'
                 fill
                 priority
-                sizes='100vw'
-                className='object-cover object-bottom -z-10'
+                className='object-cover -z-10'
             />
 
-            <div className='pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/5 -z-10' />
+            <div className='max-w-6xl w-full px-4 py-12 flex flex-col items-center'>
+                <Logo />
+                <h1
+                    className='text-emerald-900 text-4xl md:text-[154px] font-bold tracking-wide font-americana'
+                    style={{
+                        background:
+                            'linear-gradient(90deg, #005841 0%, #017255 38%, #005841 75%, #017255 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                    }}
+                >
+                    MIỀN KÝ ỨC
+                </h1>
+                <p className='text-[52px] text-[#AA8143] mt-2 font-gilroy max-w-[637px] text-center'>
+                    Ngày tái ngộ đáng nhớ từ hoài niệm thân thương
+                </p>
 
-            <div className='container mx-auto px-4 py-8 md:py-12'>
-                <header className='mb-8 md:mb-12'>
-                    <h1 className='text-center text-3xl md:text-5xl font-semibold text-emerald-900 drop-shadow-[0_1px_0_rgba(0,0,0,0.05)]'>
-                        MIỀN KÝ ỨC
-                    </h1>
-                    <p className='mt-3 text-center text-sm md:text-base text-neutral-700'>
-                        Ngày tái ngộ đáng nhớ bên người thân yêu
-                    </p>
-                </header>
-
-                <div className='mx-auto flex max-w-4xl flex-col items-center gap-4 md:gap-6'>
-                    <Button size='lg' className='rounded-full px-8 shadow'>
-                        Bắt đầu tạo
-                    </Button>
+                <div className='mt-10 shadow-xl border border-amber-200'>
+                    <CanvasFrame
+                        width={800}
+                        height={800}
+                        frameSrc='/images/frame.png'
+                        photos={[photo1, photo2]}
+                        setPhoto={(i, url) => {
+                            if (i === 0) setPhoto1(url);
+                            if (i === 1) setPhoto2(url);
+                        }}
+                        slots={[
+                            { x: 110, y: 230, width: 260, height: 340 },
+                            { x: 450, y: 180, width: 260, height: 340 },
+                        ]}
+                    />
                 </div>
+
+                {/* <div className='flex gap-6 mt-8'>
+                    <Button
+                        className='font-semibold text-[40px] px-5 py-4 w-[100%]'
+                        size={'lg'}
+                    >
+                        Tải xuống
+                    </Button>
+                    <Button
+                        className='font-semibold text-[40px] px-5 py-4 w-[100%]'
+                        size={'lg'}
+                    >
+                        Chia sẻ
+                    </Button>
+                </div> */}
             </div>
         </section>
     );
