@@ -73,8 +73,16 @@ export default function LandingTemplate() {
                         size='xl'
                         className='w-full text-[40px] leading-none tracking-tight font-extrabold'
                     >
-                        Bắt đầu tạo
+                        BẮT ĐẦU TẠO
                     </Button>
+                </div>
+
+                <div className='flex gap-6 mt-41 w-[100%]'>
+                    <p className='text-3xl text-center font-medium text-accent'>
+                        Mùa trăng tròn viên mãn là khi được trở về, gặp gỡ những
+                        gương mặt thân quen, gửi gắm bao điều tử tế, tốt lành -
+                        chúc phúc ngày đoàn viên thêm đong đầy.
+                    </p>
                 </div>
 
                 {/* <div className='flex gap-6 mt-8'>
