@@ -10,9 +10,9 @@ import { Field } from '../molecules/FieldGroup';
 
 const loginFields: Field[] = [
     {
-        name: 'username',
+        name: 'email',
         label: 'Tài khoản',
-        placeholder: 'Email hoặc số điện thoại',
+        placeholder: 'Email',
     },
     {
         name: 'password',
@@ -24,9 +24,9 @@ const loginFields: Field[] = [
 
 const registerFields: Field[] = [
     {
-        name: 'username',
+        name: 'email',
         label: 'Tài khoản',
-        placeholder: 'Email hoặc số điện thoại',
+        placeholder: 'Email',
     },
     {
         name: 'password',
