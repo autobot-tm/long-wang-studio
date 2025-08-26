@@ -3,8 +3,11 @@
 import { ArrowBigDown, ArrowBigRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Logo from '../atoms/Logo';
+
+import PhotoUploader from '../organisms/photo-uploader';
+import ShareDialog from '../organisms/ShareDialog';
 import { Button } from '../ui/button';
 
 const CanvasFrame = dynamic(
@@ -12,10 +15,37 @@ const CanvasFrame = dynamic(
     { ssr: false }
 );
 
+const slots = [
+    {
+        x: 490,
+        y: 90,
+        width: 280,
+        height: 280,
+        rotation: 8, // nghiêng nhẹ sang phải
+        cornerRadius: 16,
+        scale: 0.68,
+    },
+    {
+        x: 95, // tọa độ góc trái trên
+        y: 190,
+        width: 280, // chiều rộng vùng ảnh
+        height: 280,
+        rotation: -9, // nghiêng nhẹ sang trái
+        cornerRadius: 16, // bo góc nhẹ
+        scale: 0.68,
+    },
+];
+
 export default function LandingTemplate() {
     const [isAction, setIsAction] = useState(false);
     const [photo1, setPhoto1] = useState<string | null>(null);
     const [photo2, setPhoto2] = useState<string | null>(null);
+    const [openShare, setOpenShare] = useState(false);
+
+    const handleSetPhoto = useCallback((i: number, url: string | null) => {
+        if (i === 0) setPhoto1(url);
+        else if (i === 1) setPhoto2(url);
+    }, []);
 
     return (
         <section className='relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden'>
@@ -30,7 +60,7 @@ export default function LandingTemplate() {
             <div className='max-w-6xl w-full px-4 py-12 flex flex-col items-center'>
                 <Logo />
                 <h1
-                    className='text-emerald-900 text-4xl md:text-[154px] font-bold tracking-wide font-americana'
+                    className='text-emerald-900 text-[54px] md:text-[154px] font-bold tracking-wide font-americana text-center'
                     style={{
                         background:
                             'linear-gradient(90deg, #005841 0%, #017255 38%, #005841 75%, #017255 100%)',
@@ -40,26 +70,42 @@ export default function LandingTemplate() {
                 >
                     MIỀN KÝ ỨC
                 </h1>
-                <p className='text-[52px] text-[#AA8143] mt-2 font-gilroy max-w-[637px] text-center'>
+                <p className='text-[24px] md:text-[52px] text-[#AA8143] mt-2 font-gilroy max-w-[637px] text-center'>
                     Ngày tái ngộ đáng nhớ từ hoài niệm thân thương
                 </p>
 
                 <div className='mt-10 shadow-xl border border-amber-200'>
                     {isAction ? (
-                        <CanvasFrame
-                            width={800}
-                            height={800}
-                            frameSrc='/images/frame.png'
-                            photos={[photo1, photo2]}
-                            setPhoto={(i, url) => {
-                                if (i === 0) setPhoto1(url);
-                                if (i === 1) setPhoto2(url);
-                            }}
-                            slots={[
-                                { x: 110, y: 230, width: 260, height: 340 },
-                                { x: 450, y: 180, width: 260, height: 340 },
-                            ]}
-                        />
+                        <div
+                            className='relative'
+                            style={{ width: 800, height: 800 }}
+                        >
+                            <CanvasFrame
+                                width={800}
+                                height={800}
+                                frameSrc='/images/frame-test.png'
+                                photos={[photo1, photo2]}
+                                setPhoto={(i, u) => {
+                                    if (i === 0) setPhoto1(u);
+                                    if (i === 1) setPhoto2(u);
+                                }}
+                                slots={slots}
+                            />
+                            {!photo1 && (
+                                <PhotoUploader
+                                    slot={slots[0]}
+                                    index={0}
+                                    onSet={handleSetPhoto}
+                                />
+                            )}
+                            {!photo2 && (
+                                <PhotoUploader
+                                    slot={slots[1]}
+                                    index={1}
+                                    onSet={handleSetPhoto}
+                                />
+                            )}
+                        </div>
                     ) : (
                         <Image
                             src='/images/landing-page-frame-preview.png'
@@ -80,15 +126,25 @@ export default function LandingTemplate() {
                                 size='xl'
                                 className='text-[40px] font-extrabold'
                             >
-                                Tải xuống <ArrowBigDown className='size-10' />
+                                Tải xuống
+                                <ArrowBigDown className='size-10' fill='#fff' />
                             </Button>
                             <Button
                                 variant='cta'
                                 size='xl'
                                 className='text-[40px] font-extrabold'
+                                onClick={() => setOpenShare(!openShare)}
                             >
-                                Chia sẻ <ArrowBigRight className='size-10' />
+                                Chia sẻ{' '}
+                                <ArrowBigRight
+                                    className='size-10'
+                                    fill='#fff'
+                                />
                             </Button>
+                            <ShareDialog
+                                open={openShare}
+                                onOpenChange={setOpenShare}
+                            />
                         </>
                     ) : (
                         <Button
