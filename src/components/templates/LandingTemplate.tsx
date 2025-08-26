@@ -3,7 +3,6 @@
 import { ArrowBigDown, ArrowBigRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Logo from '../atoms/Logo';
 import { Button } from '../ui/button';
@@ -14,8 +13,6 @@ const CanvasFrame = dynamic(
 );
 
 export default function LandingTemplate() {
-    const router = useRouter();
-
     const [isAction, setIsAction] = useState(false);
     const [photo1, setPhoto1] = useState<string | null>(null);
     const [photo2, setPhoto2] = useState<string | null>(null);
