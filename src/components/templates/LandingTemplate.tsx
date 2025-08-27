@@ -82,7 +82,7 @@ export default function LandingTemplate() {
         >
             <div className='max-w-6xl w-full px-4 py-12 flex flex-col items-center'>
                 <Logo />
-                <h1
+                {/* <h1
                     className='text-emerald-900 text-[74px] md:text-[154px] font-bold tracking-wide font-americana text-center mt-[18px]'
                     style={{
                         background:
@@ -92,8 +92,24 @@ export default function LandingTemplate() {
                     }}
                 >
                     MIỀN KÝ ỨC
-                </h1>
-                <p className='text-[24px] md:text-[52px] text-[#AA8143] mt-2 font-gilroy max-w-[637px] text-center'>
+                </h1> */}
+                <Image
+                    src='/images/header.png'
+                    alt='header-landing'
+                    width={800}
+                    height={600}
+                    className='object-cover'
+                    priority
+                />
+                <p
+                    className='
+    text-[24px] md:text-[42px]
+    text-[#AA8143] mt-4 font-gilroy
+    max-w-[500px] text-center
+    leading-[1.3] md:leading-[1.15]   /* mobile thoáng hơn, desktop chặt hơn */
+    
+  '
+                >
                     Ngày tái ngộ đáng nhớ từ hoài niệm thân thương
                 </p>
 
@@ -185,8 +201,8 @@ export default function LandingTemplate() {
                     )}
                 </div>
 
-                <div className='flex gap-6 md:mt-41 mt-20 w-[100%]'>
-                    <p className='md:text-[32px] text-[14px] text-center font-medium text-accent font-gilroy'>
+                <div className='flex gap-6 md:mt-20 mt-10 w-[100%]'>
+                    <p className='md:text-[28px] text-[14px] text-center font-medium text-accent font-gilroy'>
                         Mùa trăng tròn viên mãn là khi được trở về, gặp gỡ những
                         gương mặt thân quen, gửi gắm bao điều tử tế, tốt lành -
                         chúc phúc ngày đoàn viên thêm đong đầy.

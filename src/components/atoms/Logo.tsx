@@ -6,7 +6,7 @@ export interface LogoProps {
     width?: number;
     height?: number;
 }
-export default function Logo({ width = 745, height = 142 }: LogoProps) {
+export default function Logo({ width = 658, height = 125 }: LogoProps) {
     return (
         <Image
             src='/images/logo.png'

@@ -1,13 +1,9 @@
 'use client';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { cn } from '@/libs/utils';
 import { buildShareUrl, SharePlatform, tryNativeShare } from '@/utils/share';
 import { ArrowBigRight, Check, Copy, Link2 } from 'lucide-react';
+import Image from 'next/image';
 import { useMemo, useRef, useState } from 'react';
 import { Button } from '../ui/button';
 import { SocialChoice } from './SocialChoice';
@@ -75,13 +71,16 @@ export default function ShareMiniPopup({
                         backgroundPosition: 'center',
                     }}
                 >
-                    <DialogHeader>
-                        <DialogTitle className='text-center text-emerald-900 text-[32px] font-semibold font-americana mt-5'>
-                            {title}
-                        </DialogTitle>
+                    <DialogHeader className='flex items-center mx-0 mt-5'>
+                        <Image
+                            src='/images/header-share.png'
+                            alt='header-share'
+                            width={350}
+                            height={250}
+                            className='object-cover'
+                            priority
+                        />
                     </DialogHeader>
-
-                    {/* --- Copy Link strip --- */}
                     <div className='mt-5'>
                         <div className='mt-2 flex items-center gap-2 bg-white/85 backdrop-blur rounded-full px-3 py-2 shadow-[0_4px_16px_rgba(0,0,0,.12)] border-1 border-[#AA8143]'>
                             <Link2 className='size-4 opacity-70' />
@@ -99,10 +98,7 @@ export default function ShareMiniPopup({
                                 type='button'
                                 onClick={() => copyToClipboard(url)}
                                 className={cn(
-                                    'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold',
-                                    copied
-                                        ? 'bg-emerald-600 text-white'
-                                        : 'bg-slate-900 text-white hover:bg-slate-800'
+                                    'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold'
                                 )}
                             >
                                 {copied ? (
@@ -110,7 +106,6 @@ export default function ShareMiniPopup({
                                 ) : (
                                     <Copy className='size-4' />
                                 )}
-                                {copied ? 'Đã sao chép' : 'Copy'}
                             </button>
                         </div>
                         <div
@@ -121,7 +116,7 @@ export default function ShareMiniPopup({
                                     : 'opacity-0'
                             )}
                         >
-                            Đã sao chép liên kết vào clipboard
+                            Đã sao chép liên kết
                         </div>
                     </div>
 

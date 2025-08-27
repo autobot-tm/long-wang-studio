@@ -79,7 +79,6 @@ export default function FrameDialogContent({
                     isolation: 'isolate',
                 }}
             >
-                {/* Overlay dưới khung */}
                 <div
                     className='absolute inset-0'
                     style={{ zIndex: 10, pointerEvents: 'none' }}
@@ -87,7 +86,6 @@ export default function FrameDialogContent({
                     {overlay}
                 </div>
 
-                {/* Khung đúng tỉ lệ & đúng width theo ảnh */}
                 <div
                     className='absolute inset-0 bg-no-repeat bg-center bg-contain'
                     style={{
@@ -97,9 +95,8 @@ export default function FrameDialogContent({
                     }}
                 />
 
-                {/* Action */}
                 <div
-                    className='absolute inset-x-0 bottom-16 px-6 flex justify-center'
+                    className='absolute inset-x-0 bottom-10 px-6 flex justify-center'
                     style={{ zIndex: 30, pointerEvents: 'none' }}
                 >
                     <div className='pointer-events-auto'>{children}</div>
