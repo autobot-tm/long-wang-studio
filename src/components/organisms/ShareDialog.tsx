@@ -62,7 +62,7 @@ export default function ShareDialog({
                     disabled={!photo}
                 >
                     <span>Chia sẻ</span>
-                    <ArrowBigRight size={10} fill='#F6F2D7' />
+                    <ArrowBigRight size={40} fill='#F6F2D7' />
                 </Button>
             </FrameDialogContent>
 
