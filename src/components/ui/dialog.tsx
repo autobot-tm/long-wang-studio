@@ -38,7 +38,8 @@ function DialogOverlay({
         <DialogPrimitive.Overlay
             data-slot='dialog-overlay'
             className={cn(
-                'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50',
+                // default z-50
+                'data-[state=open]:animate-in data-[state=closed]:animate-out fixed inset-0 z-50 bg-black/50',
                 className
             )}
             {...props}
@@ -52,47 +53,72 @@ function DialogContent({
     showCloseButton = true,
     fitContent = false,
     centerByGrid = false,
+    overlayClassName,
+    zIndex = 60,
     ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
     showCloseButton?: boolean;
     fitContent?: boolean;
     centerByGrid?: boolean;
+    overlayClassName?: string;
+    zIndex?: number;
 }) {
-    return (
-        <DialogPortal data-slot='dialog-portal'>
-            <DialogOverlay />
-            <DialogPrimitive.Content
-                data-slot='dialog-content'
-                className={cn(
-                    'bg-background z-50 grid gap-4 rounded-lg border p-6 shadow-lg duration-200',
-                    centerByGrid
-                        ? 'fixed inset-0 place-items-center'
-                        : 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
-                    fitContent
-                        ? 'w-auto max-w-none p-0 shadow-none border-0 bg-transparent'
-                        : 'w-full max-w-[calc(100%-2rem)] sm:max-w-lg',
-                    className
-                )}
-                {...props}
+    const base = cn(
+        'bg-background grid gap-4 rounded-lg border p-6 shadow-lg duration-200',
+        fitContent &&
+            'w-auto max-w-none p-0 shadow-none border-0 bg-transparent'
+    );
+
+    const CloseBtn = showCloseButton ? (
+        <DialogPrimitive.Close asChild>
+            <button
+                type='button'
+                aria-label='Close'
+                className='absolute right-4 top-4 inline-flex size-8 items-center justify-center
+                 rounded-full bg-black/30 text-white hover:bg-black/40 pointer-events-auto'
+                style={{ zIndex: (zIndex ?? 60) + 3 }}
             >
-                {children}
-                {showCloseButton && (
-                    <DialogPrimitive.Close
-                        data-slot='dialog-close'
-                        aria-label='Close'
-                        className={cn(
-                            'absolute right-4 top-4 z-10 inline-flex size-8 items-center justify-center',
-                            'rounded-full bg-black/30 text-white opacity-90 hover:opacity-100 hover:bg-black/40',
-                            'cursor-pointer pointer-events-auto select-none',
-                            'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                            '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4'
-                        )}
+                <XIcon />
+            </button>
+        </DialogPrimitive.Close>
+    ) : null;
+
+    return (
+        <DialogPortal>
+            {/* overlay luôn dưới content */}
+            <DialogOverlay
+                className={cn('fixed inset-0 bg-black/50', overlayClassName)}
+                style={{ zIndex }}
+            />
+
+            {centerByGrid ? (
+                <div
+                    className='fixed inset-0 grid place-items-center'
+                    style={{ zIndex: zIndex + 1 }}
+                >
+                    <DialogPrimitive.Content
+                        className={cn(base, className, 'relative')} // relative để z-index con hoạt động
+                        style={{ zIndex: zIndex + 2 }}
+                        {...props}
                     >
-                        <XIcon />
-                        <span className='sr-only'>Close</span>
-                    </DialogPrimitive.Close>
-                )}
-            </DialogPrimitive.Content>
+                        {children}
+                        {CloseBtn}
+                    </DialogPrimitive.Content>
+                </div>
+            ) : (
+                <DialogPrimitive.Content
+                    className={cn(
+                        base,
+                        'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 relative',
+                        className
+                    )}
+                    style={{ zIndex: zIndex + 2 }}
+                    {...props}
+                >
+                    {children}
+                    {CloseBtn}
+                </DialogPrimitive.Content>
+            )}
         </DialogPortal>
     );
 }

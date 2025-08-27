@@ -54,11 +54,15 @@ export default function CropDialog({
     }
     return (
         <Dialog open={open} onOpenChange={v => !v && onClose()}>
-            <DialogContent className='sm:max-w-[700px]'>
+            <DialogContent
+                className='w-[340px] sm:w-[400px] md:w-[540px]'
+                zIndex={380}
+                centerByGrid
+            >
                 <DialogHeader>
                     <DialogTitle>Chỉnh ảnh</DialogTitle>
                 </DialogHeader>
-                <div className='relative h-[360px] rounded-md overflow-hidden bg-muted'>
+                <div className='relative h-[360px] rounded-xs overflow-hidden  bg-[#F6F2D7]'>
                     <Cropper
                         image={imgUrl}
                         aspect={aspect}
@@ -80,14 +84,6 @@ export default function CropDialog({
                         value={[zoom]}
                         onValueChange={v => setZoom(v[0])}
                     />
-                    {/* <div className='text-sm'>Rotate</div>
-                    <Slider
-                        min={-45}
-                        max={45}
-                        step={1}
-                        value={[rot]}
-                        onValueChange={v => setRot(v[0])}
-                    /> */}
                 </div>
                 <DialogFooter>
                     <Button variant='outline' onClick={onClose}>

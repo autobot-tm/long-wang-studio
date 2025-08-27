@@ -112,6 +112,11 @@ const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
                 height={height}
                 scaleX={stageScale}
                 scaleY={stageScale}
+                style={{
+                    width: width * stageScale, // ✅ DOM co theo container (w)
+                    height: height * stageScale, // ✅
+                    display: 'block', // tránh inline gap
+                }}
             >
                 <Layer>
                     {frameImg && (
