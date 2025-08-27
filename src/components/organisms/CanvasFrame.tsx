@@ -1,145 +1,176 @@
 'use client';
+import {
+    forwardRef,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState,
+} from 'react';
+import { Group, Image as KImage, Layer, Stage } from 'react-konva';
 
-import { Upload, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
-import { Image as KonvaImage, Layer, Stage } from 'react-konva';
-
-interface Slot {
+type Slot = {
     x: number;
     y: number;
     width: number;
     height: number;
-}
-
-interface CanvasFrameProps {
+    cornerRadius?: number | number[];
+    rotation?: number;
+};
+interface Props {
     width: number;
     height: number;
     frameSrc: string;
     photos: (string | null)[];
-    setPhoto: (i: number, url: string | null) => void;
     slots: Slot[];
+    stageScale?: number;
+}
+export type CanvasFrameHandle = {
+    capture: () => string | null;
+    captureBlob: () => Promise<Blob | null>;
+    captureSlot: (i: number) => string | null;
+};
+
+function getCoverRect(bw: number, bh: number, iw: number, ih: number) {
+    const s = Math.max(bw / iw, bh / ih);
+    const w = iw * s,
+        h = ih * s;
+    return { x: (bw - w) / 2, y: (bh - h) / 2, w, h };
 }
 
-const CanvasFrame: React.FC<CanvasFrameProps> = ({
-    width,
-    height,
-    frameSrc,
-    photos,
-    setPhoto,
-    slots,
-}) => {
-    const stageRef = useRef<any>(null);
-    const [frameImage, setFrameImage] = useState<HTMLImageElement | null>(null);
-    const [photoImages, setPhotoImages] = useState<(HTMLImageElement | null)[]>(
-        []
-    );
+const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
+    ({ width, height, frameSrc, photos, slots, stageScale = 1 }, ref) => {
+        const stageRef = useRef<any>(null);
+        const [frameImg, setFrameImg] = useState<HTMLImageElement | null>(null);
+        const [imgs, setImgs] = useState<(HTMLImageElement | null)[]>([]);
 
-    useEffect(() => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = frameSrc;
-        img.onload = () => setFrameImage(img);
-    }, [frameSrc]);
+        useEffect(() => {
+            const i = new Image();
+            i.crossOrigin = 'anonymous';
+            i.src = frameSrc;
+            i.onload = () => setFrameImg(i);
+        }, [frameSrc]);
 
-    useEffect(() => {
-        const loadPhotos = async () => {
-            const imgs = await Promise.all(
+        useEffect(() => {
+            Promise.all(
                 photos.map(
                     src =>
-                        new Promise<HTMLImageElement | null>(resolve => {
-                            if (!src) return resolve(null);
-                            const img = new Image();
-                            img.crossOrigin = 'anonymous';
-                            img.src = src;
-                            img.onload = () => resolve(img);
+                        new Promise<HTMLImageElement | null>(res => {
+                            if (!src) return res(null);
+                            const i = new Image();
+                            i.crossOrigin = 'anonymous';
+                            i.src = src;
+                            i.onload = () => res(i);
                         })
                 )
-            );
-            setPhotoImages(imgs);
-        };
-        loadPhotos();
-    }, [photos]);
+            ).then(setImgs);
+        }, [photos]);
 
-    return (
-        <div className='relative' style={{ width, height }}>
-            <Stage width={width} height={height} ref={stageRef}>
+        useImperativeHandle(
+            ref,
+            () => ({
+                capture: () => {
+                    stageRef.current?.batchDraw();
+                    const pr = 1 / (stageScale || 1); // trả về ảnh gốc 800×800
+                    return (
+                        stageRef.current?.toDataURL({ pixelRatio: pr }) ?? null
+                    );
+                },
+                captureBlob: async () => {
+                    stageRef.current?.batchDraw();
+                    const uri = stageRef.current?.toDataURL({
+                        pixelRatio: 1 / (stageScale || 1),
+                    });
+                    if (!uri) return null;
+                    const res = await fetch(uri);
+                    return await res.blob();
+                },
+                captureSlot: (i: number) => {
+                    const img = imgs[i];
+                    const s = slots[i];
+                    if (!img || !s) return null;
+                    const fit = getCoverRect(
+                        s.width,
+                        s.height,
+                        img.naturalWidth,
+                        img.naturalHeight
+                    );
+                    const c = document.createElement('canvas');
+                    c.width = s.width;
+                    c.height = s.height;
+                    const ctx = c.getContext('2d')!;
+                    ctx.drawImage(img, fit.x, fit.y, fit.w, fit.h);
+                    return c.toDataURL('image/png');
+                },
+            }),
+            [imgs, slots, stageScale]
+        );
+
+        return (
+            <Stage
+                ref={stageRef}
+                width={width}
+                height={height}
+                scaleX={stageScale}
+                scaleY={stageScale}
+            >
                 <Layer>
-                    {frameImage && (
-                        <KonvaImage
-                            image={frameImage}
+                    {frameImg && (
+                        <KImage
+                            image={frameImg}
                             width={width}
                             height={height}
                         />
                     )}
-
-                    {slots.map((slot, i) =>
-                        photoImages[i] ? (
-                            <KonvaImage
+                    {slots.map((slot, i) => {
+                        const img = imgs[i];
+                        if (!img) return null;
+                        const fit = getCoverRect(
+                            slot.width,
+                            slot.height,
+                            img.naturalWidth,
+                            img.naturalHeight
+                        );
+                        return (
+                            <Group
                                 key={i}
-                                image={photoImages[i]!}
                                 x={slot.x}
                                 y={slot.y}
-                                width={slot.width}
-                                height={slot.height}
-                            />
-                        ) : null
-                    )}
+                                rotation={slot.rotation ?? 0}
+                                clipFunc={ctx => {
+                                    const r = slot.cornerRadius ?? 18,
+                                        w = slot.width,
+                                        h = slot.height,
+                                        rr = Array.isArray(r)
+                                            ? r
+                                            : [r, r, r, r];
+                                    const [tl, tr, br, bl] = rr;
+                                    ctx.beginPath();
+                                    ctx.moveTo(tl, 0);
+                                    ctx.lineTo(w - tr, 0);
+                                    ctx.quadraticCurveTo(w, 0, w, tr);
+                                    ctx.lineTo(w, h - br);
+                                    ctx.quadraticCurveTo(w, h, w - br, h);
+                                    ctx.lineTo(bl, h);
+                                    ctx.quadraticCurveTo(0, h, 0, h - bl);
+                                    ctx.lineTo(0, tl);
+                                    ctx.quadraticCurveTo(0, 0, tl, 0);
+                                    ctx.closePath();
+                                    ctx.clip();
+                                }}
+                            >
+                                <KImage
+                                    image={img}
+                                    x={fit.x}
+                                    y={fit.y}
+                                    width={fit.w}
+                                    height={fit.h}
+                                />
+                            </Group>
+                        );
+                    })}
                 </Layer>
             </Stage>
-
-            {slots.map((slot, i) =>
-                photos[i] ? (
-                    <button
-                        key={i}
-                        onClick={() => setPhoto(i, null)}
-                        className='absolute flex items-center justify-center w-6 h-6 
-                       bg-red-600 text-white rounded-full shadow 
-                       hover:bg-red-700 transition'
-                        style={{
-                            left: slot.x + slot.width - 12,
-                            top: slot.y - 12,
-                        }}
-                    >
-                        <X className='w-4 h-4' />
-                    </button>
-                ) : (
-                    <label
-                        key={i}
-                        className='absolute flex flex-col items-center justify-center 
-                       text-amber-700 bg-amber-50/80 border-2 border-dashed 
-                       border-amber-400 rounded-md cursor-pointer 
-                       hover:bg-amber-100 transition'
-                        style={{
-                            left: slot.x,
-                            top: slot.y,
-                            width: slot.width,
-                            height: slot.height,
-                        }}
-                    >
-                        <Upload className='w-6 h-6 mb-1' />
-                        <span className='text-sm font-medium'>
-                            Thêm hình {i + 1}
-                        </span>
-                        <span className='text-[10px] text-amber-600'>
-                            (JPG, PNG)
-                        </span>
-                        <input
-                            type='file'
-                            accept='image/*'
-                            className='hidden'
-                            onChange={e => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                    const url = URL.createObjectURL(file);
-                                    setPhoto(i, url);
-                                }
-                            }}
-                        />
-                    </label>
-                )
-            )}
-        </div>
-    );
-};
-
+        );
+    }
+);
 export default CanvasFrame;

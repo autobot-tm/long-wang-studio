@@ -135,3 +135,14 @@
         font-family: var(--font-gilroy);
     }
 }
+
+.text-fill-pagebg {
+    display: inline-block;
+    background-image: var(--page-bg, linear-gradient(90deg, #005841, #017255));
+    background-size: cover;
+    background-position: center;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}

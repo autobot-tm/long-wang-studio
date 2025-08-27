@@ -11,6 +11,7 @@ type Props = {
     baseWidth?: number;
     baseHeight?: number;
     children?: React.ReactNode;
+    overlay?: React.ReactNode;
 };
 
 export default function ImageDialogContent({
@@ -19,6 +20,7 @@ export default function ImageDialogContent({
     baseWidth = 960,
     baseHeight = 1280,
     children,
+    overlay,
 }: Props) {
     const [ratio, setRatio] = React.useState(baseWidth / baseHeight); // w/h
     const [box, setBox] = React.useState<{ w: number; h: number }>({
@@ -65,12 +67,15 @@ export default function ImageDialogContent({
                     fill
                     priority
                     sizes='(max-width: 960px) 90vw, 960px'
-                    className='object-contain'
+                    className='object-contain z-10'
                     onLoadingComplete={img => {
                         const r = img.naturalWidth / img.naturalHeight;
                         if (Number.isFinite(r) && r > 0) setRatio(r);
                     }}
                 />
+                <div className='absolute inset-0 z-0 pointer-events-none'>
+                    {overlay}
+                </div>
                 <DialogClose asChild>
                     <button
                         aria-label='Đóng'

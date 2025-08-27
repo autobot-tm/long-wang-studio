@@ -1,37 +1,33 @@
 'use client';
 
 import { ArrowBigDown, ArrowBigRight } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import Logo from '../atoms/Logo';
 
-import PhotoUploader from '../organisms/photo-uploader';
+import MaskedIcon from '../atoms/MaskedIcon';
+import BackgroundProvider from '../organisms/BackgroundProvider';
+import ResponsiveFrame from '../organisms/ResponsiveFrame';
 import ShareDialog from '../organisms/ShareDialog';
 import { Button } from '../ui/button';
 
-const CanvasFrame = dynamic(
-    () => import('@/components/organisms/CanvasFrame'),
-    { ssr: false }
-);
-
 const slots = [
     {
-        x: 490,
-        y: 90,
-        width: 280,
+        x: 88,
+        y: 335,
+        width: 275,
         height: 280,
-        rotation: 8, // nghiêng nhẹ sang phải
-        cornerRadius: 16,
+        rotation: 4.2,
+        cornerRadius: 0,
         scale: 0.68,
     },
     {
-        x: 95, // tọa độ góc trái trên
-        y: 190,
-        width: 280, // chiều rộng vùng ảnh
-        height: 280,
-        rotation: -9, // nghiêng nhẹ sang trái
-        cornerRadius: 16, // bo góc nhẹ
+        x: 405,
+        y: 150,
+        width: 288,
+        height: 285,
+        rotation: -5.8,
+        cornerRadius: 0,
         scale: 0.68,
     },
 ];
@@ -41,26 +37,53 @@ export default function LandingTemplate() {
     const [photo1, setPhoto1] = useState<string | null>(null);
     const [photo2, setPhoto2] = useState<string | null>(null);
     const [openShare, setOpenShare] = useState(false);
+    const [sharePhoto, setSharePhoto] = useState<string | null>(null);
+    const apiRef = useRef<{
+        capture: () => string | null;
+        captureSlot: (i: number) => string | null;
+        captureBlob: () => Promise<Blob | null>;
+    } | null>(null);
 
     const handleSetPhoto = useCallback((i: number, url: string | null) => {
         if (i === 0) setPhoto1(url);
         else if (i === 1) setPhoto2(url);
     }, []);
 
-    return (
-        <section className='relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden'>
-            <Image
-                src='/images/landing-background.png'
-                alt='Background'
-                fill
-                priority
-                className='object-cover -z-10'
-            />
+    async function handleDownload() {
+        const blob = await apiRef.current?.captureBlob();
+        if (!blob) return;
 
+        const file = new File([blob], 'mien-ky-uc.png', { type: 'image/png' });
+
+        // A. Mobile: Web Share (nếu hỗ trợ chia sẻ file)
+        if (navigator.canShare?.({ files: [file] })) {
+            await navigator.share({ files: [file], title: 'Miền Ký Ức' });
+            return;
+        }
+
+        // B. Fallback: download bằng <a download>
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'mien-ky-uc.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    return (
+        <BackgroundProvider
+            as='section'
+            bg={`url('/images/landing-background.png')`}
+            paint
+            fixed
+            className='relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden'
+        >
             <div className='max-w-6xl w-full px-4 py-12 flex flex-col items-center'>
                 <Logo />
                 <h1
-                    className='text-emerald-900 text-[54px] md:text-[154px] font-bold tracking-wide font-americana text-center'
+                    className='text-emerald-900 text-[74px] md:text-[154px] font-bold tracking-wide font-americana text-center mt-[18px]'
                     style={{
                         background:
                             'linear-gradient(90deg, #005841 0%, #017255 38%, #005841 75%, #017255 100%)',
@@ -76,35 +99,16 @@ export default function LandingTemplate() {
 
                 <div className='mt-10 shadow-xl border border-amber-200'>
                     {isAction ? (
-                        <div
-                            className='relative'
-                            style={{ width: 800, height: 800 }}
-                        >
-                            <CanvasFrame
-                                width={800}
-                                height={800}
+                        <div className='relative width-[800px] height-[800px]'>
+                            <ResponsiveFrame
                                 frameSrc='/images/frame-test.png'
-                                photos={[photo1, photo2]}
-                                setPhoto={(i, u) => {
-                                    if (i === 0) setPhoto1(u);
-                                    if (i === 1) setPhoto2(u);
-                                }}
                                 slots={slots}
+                                photos={[photo1, photo2]}
+                                setPhoto={handleSetPhoto}
+                                onBind={api => {
+                                    apiRef.current = api;
+                                }}
                             />
-                            {!photo1 && (
-                                <PhotoUploader
-                                    slot={slots[0]}
-                                    index={0}
-                                    onSet={handleSetPhoto}
-                                />
-                            )}
-                            {!photo2 && (
-                                <PhotoUploader
-                                    slot={slots[1]}
-                                    index={1}
-                                    onSet={handleSetPhoto}
-                                />
-                            )}
                         </div>
                     ) : (
                         <Image
@@ -124,24 +128,45 @@ export default function LandingTemplate() {
                             <Button
                                 variant='cta'
                                 size='xl'
-                                className='text-[40px] font-extrabold'
+                                textBg='var(--page-bg)'
+                                disabled={!photo1 || !photo2}
+                                onClick={handleDownload}
                             >
-                                Tải xuống
-                                <ArrowBigDown className='size-10' fill='#fff' />
+                                <span className='text-fill-pagebg !text-transparent'>
+                                    Tải xuống
+                                </span>
+                                <MaskedIcon
+                                    Icon={ArrowBigDown}
+                                    sizeCSS='1em'
+                                    className='ml-2'
+                                />
                             </Button>
                             <Button
                                 variant='cta'
                                 size='xl'
-                                className='text-[40px] font-extrabold'
-                                onClick={() => setOpenShare(!openShare)}
+                                className='flex items-center gap-2'
+                                textBg='var(--page-bg)'
+                                disabled={!photo1 || !photo2}
+                                onClick={() => {
+                                    const url = apiRef.current?.capture();
+
+                                    if (url) {
+                                        setSharePhoto(url);
+                                        setOpenShare(true);
+                                    }
+                                }}
                             >
-                                Chia sẻ{' '}
-                                <ArrowBigRight
-                                    className='size-10'
-                                    fill='#fff'
+                                <span className='text-fill-pagebg !text-transparent'>
+                                    Chia sẻ{' '}
+                                </span>
+                                <MaskedIcon
+                                    Icon={ArrowBigRight}
+                                    sizeCSS='1em'
+                                    className='ml-2'
                                 />
                             </Button>
                             <ShareDialog
+                                photo={sharePhoto || ''}
                                 open={openShare}
                                 onOpenChange={setOpenShare}
                             />
@@ -150,22 +175,24 @@ export default function LandingTemplate() {
                         <Button
                             variant='cta'
                             size='xl'
-                            className='w-full text-[40px] leading-none tracking-tight font-extrabold'
+                            textBg='var(--page-bg)'
                             onClick={() => setIsAction(!isAction)}
                         >
-                            BẮT ĐẦU TẠO
+                            <span className='text-fill-pagebg !text-transparent'>
+                                BẮT ĐẦU TẠO
+                            </span>
                         </Button>
                     )}
                 </div>
 
-                <div className='flex gap-6 mt-41 w-[100%]'>
-                    <p className='text-3xl text-center font-medium text-accent'>
+                <div className='flex gap-6 md:mt-41 mt-20 w-[100%]'>
+                    <p className='md:text-[32px] text-[14px] text-center font-medium text-accent font-gilroy'>
                         Mùa trăng tròn viên mãn là khi được trở về, gặp gỡ những
                         gương mặt thân quen, gửi gắm bao điều tử tế, tốt lành -
                         chúc phúc ngày đoàn viên thêm đong đầy.
                     </p>
                 </div>
             </div>
-        </section>
+        </BackgroundProvider>
     );
 }
