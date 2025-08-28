@@ -16,6 +16,7 @@ export interface ApiRequest {
 }
 
 export interface ApiResponse<T> {
+    data: any;
     success: boolean;
     message: string;
     statusCode: number;

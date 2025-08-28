@@ -103,12 +103,11 @@ export default function LandingTemplate() {
                 />
                 <p
                     className='
-    text-[24px] md:text-[42px]
-    text-[#AA8143] mt-4 font-gilroy
-    max-w-[500px] text-center
-    leading-[1.3] md:leading-[1.15]   /* mobile thoáng hơn, desktop chặt hơn */
-    
-  '
+                                text-[24px] md:text-[42px]
+                                text-[#AA8143] mt-4 font-gilroy
+                                max-w-[500px] text-center
+                                leading-[1.3] md:leading-[1.15]
+                            '
                 >
                     Ngày tái ngộ đáng nhớ từ hoài niệm thân thương
                 </p>

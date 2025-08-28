@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import localFont from 'next/font/local';
+import { Toaster } from 'sonner';
 import './globals.css';
 
 const gilroy = localFont({
@@ -51,6 +52,7 @@ export default function RootLayout({
         <html lang='en'>
             <body className={`${gilroy.variable} ${americana.variable}`}>
                 {children}
+                <Toaster richColors closeButton position='top-center' />
             </body>
         </html>
     );

@@ -24,7 +24,7 @@ const buttonVariants = cva(
                 default: 'h-9 px-4 py-2 has-[>svg]:px-3',
                 sm: 'h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5',
                 lg: 'h-15 rounded-md px-8 py-4 has-[>svg]:px-4',
-                xl: 'md:h-20 h-15 px-8 py-2 rounded-full text-[clamp(20px,5vw,40px)] font-semibold font-gilroy text-[32px]',
+                xl: 'md:h-15 h-10 px-8 py-2 rounded-full text-[clamp(20px,5vw,40px)] font-semibold font-gilroy text-[24px]',
                 icon: 'size-9 rounded-md',
             },
         },

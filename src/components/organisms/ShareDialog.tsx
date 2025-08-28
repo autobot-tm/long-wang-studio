@@ -2,6 +2,7 @@
 import { Dialog } from '@/components/ui/dialog';
 import { uploadImage } from '@/services/api/image.service';
 import { dataUrlToFile } from '@/utils/dataUrlToFile';
+import { buildShareUrl, tryNativeShare } from '@/utils/share';
 import {
     hashPhoto,
     loadCacheFromStorage,
@@ -10,9 +11,10 @@ import {
 } from '@/utils/share-upload-once';
 import { ArrowBigRight } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import FrameDialogContent from '../molecules/FrameDialogContent';
-import ShareMiniPopup from '../molecules/ShareMiniPopup';
 import { Button } from '../ui/button';
+import { Spinner } from '../ui/spinner';
 
 export default function ShareDialog({
     open,
@@ -27,8 +29,6 @@ export default function ShareDialog({
         BASE_H = 1280;
     const SLOT = { x: 124, y: 457, w: 498, h: 498, rotation: -4 };
     const pct = (v: number, base: number) => `${(v / base) * 100}%`;
-    const [miniOpen, setMiniOpen] = useState(false);
-    const [shareUrl, setShareUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const abortRef = useRef<AbortController | null>(null);
 
@@ -65,6 +65,20 @@ export default function ShareDialog({
         };
     }, []);
 
+    const shareFacebook = async (url: string) => {
+        if (!url) return;
+
+        const link = buildShareUrl('facebook', url);
+        if (link) {
+            // Mở cửa sổ Facebook share
+            window.open(link, '_blank', 'noopener,noreferrer');
+            return;
+        }
+
+        // fallback: Web Share API (native mobile)
+        await tryNativeShare(url);
+    };
+
     const handleShare = async () => {
         if (!photo || loading) return;
         setLoading(true);
@@ -72,8 +86,7 @@ export default function ShareDialog({
             const key = await hashPhoto(photo);
             const cached = shareCache.get(key);
             if (cached) {
-                setShareUrl(cached);
-                setMiniOpen(true);
+                await shareFacebook(cached);
                 return;
             }
 
@@ -83,14 +96,19 @@ export default function ShareDialog({
             const file = await dataUrlToFile(photo, 'share.png');
             const res = await uploadImage(file, {
                 tags: 'landing-share',
-                isPublic: true /*, signal: controller.signal*/,
+                isPublic: true,
+                // signal: controller.signal
             });
-            if (res.success && res.data) {
+
+            if (res.success && res.data?.url) {
                 shareCache.set(key, res.data.url);
                 persistCache();
-                setShareUrl(res.data.url);
-                setMiniOpen(true);
-            } else alert(res.message ?? 'Upload ảnh thất bại');
+                await shareFacebook(res.data.url);
+            } else {
+                toast.error(res.message ?? 'Upload ảnh thất bại.');
+            }
+        } catch {
+            toast.error('Có lỗi không xác định trong quá trình chia sẻ.');
         } finally {
             setLoading(false);
             abortRef.current = null;
@@ -104,7 +122,7 @@ export default function ShareDialog({
                 // baseWidth={960}
                 // baseHeight={1280}
                 zIndex={70}
-                overlay={overlay /* như bạn đã tính pct/rotation */}
+                overlay={overlay}
             >
                 <Button
                     variant='cta'
@@ -113,17 +131,10 @@ export default function ShareDialog({
                     onClick={handleShare}
                     disabled={!photo || loading}
                 >
-                    <span>{loading ? 'Đang tải...' : 'Chia sẻ'}</span>
-                    <ArrowBigRight size={40} fill='#F6F2D7' />
+                    <span>{loading ? <Spinner size={32} /> : 'Chia sẻ'}</span>
+                    {!loading && <ArrowBigRight size={40} fill='#F6F2D7' />}
                 </Button>
             </FrameDialogContent>
-
-            {/* Dialog con nên cao hơn */}
-            <ShareMiniPopup
-                open={miniOpen}
-                onOpenChange={setMiniOpen}
-                defaultUrl={shareUrl ?? ''}
-            />
         </Dialog>
     );
 }
