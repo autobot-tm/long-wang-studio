@@ -116,7 +116,7 @@ export default function LandingTemplate() {
                     {isAction ? (
                         <div className='relative width-[800px] height-[800px]'>
                             <ResponsiveFrame
-                                frameSrc='/images/frame-test.png'
+                                frameSrc='/images/frame-section.png'
                                 slots={slots}
                                 photos={[photo1, photo2]}
                                 setPhoto={handleSetPhoto}

@@ -97,7 +97,6 @@ export default function ShareDialog({
             const res = await uploadImage(file, {
                 tags: 'landing-share',
                 isPublic: true,
-                // signal: controller.signal
             });
 
             if (res.success && res.data?.url) {
@@ -118,9 +117,7 @@ export default function ShareDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <FrameDialogContent
-                frameSrc='/images/share-frame.png'
-                // baseWidth={960}
-                // baseHeight={1280}
+                frameSrc='/images/frame-share.png'
                 zIndex={70}
                 overlay={overlay}
             >
