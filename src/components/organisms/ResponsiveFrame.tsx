@@ -2,6 +2,7 @@
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useRef } from 'react';
+import { Spinner } from '../ui/spinner';
 import type { CanvasFrameHandle } from './CanvasFrame';
 import PhotoUploader from './photo-uploader';
 
@@ -9,32 +10,58 @@ const CanvasFrame = dynamic(() => import('./CanvasFrame'), { ssr: false });
 const BASE = 800;
 const SIZES = { mobile: 320, tablet: 600, desktop: 800 };
 
+export type CaptureOptions = {
+    pixelRatio?: number;
+    mimeType?: string;
+    quality?: number; // chỉ áp dụng cho image/jpeg|webp
+};
+
 export default function ResponsiveFrame(props: {
     frameSrc: string;
-    slots: any[];
+    slots: Array<{
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        rotation?: number;
+        cornerRadius?: number | number[];
+        scale?: number;
+    }>;
     photos: (string | null)[];
     setPhoto: (i: number, u: string | null) => void;
     onBind?: (api: {
         capture: () => string | null;
         captureSlot: (i: number) => string | null;
-        captureBlob: () => Promise<Blob | null>;
+        captureBlob: (opts?: CaptureOptions) => Promise<Blob | null>;
     }) => void;
 }) {
     const { frameSrc, slots, photos, setPhoto, onBind } = props;
+
     const bp = useBreakpoint();
     const W = SIZES[bp];
     const scale = useMemo(() => W / BASE, [W]);
     const frameRef = useRef<CanvasFrameHandle>(null);
 
+    onBind?.({
+        capture: () => frameRef.current!.capture(),
+        captureSlot: (i: number) => frameRef.current!.captureSlot(i),
+        captureBlob: (opts?: CaptureOptions) =>
+            frameRef.current!.captureBlob(opts), // ✅
+    });
+
+    // tránh phụ thuộc vào ref.current trong deps
     useEffect(() => {
         if (onBind && frameRef.current) {
             onBind({
                 capture: () => frameRef.current!.capture(),
                 captureSlot: i => frameRef.current!.captureSlot(i),
-                captureBlob: () => frameRef.current!.captureBlob(),
+                captureBlob: (opts?: CaptureOptions) =>
+                    frameRef.current!.captureBlob(opts),
             });
         }
-    }, [onBind]);
+    }, [onBind, scale]);
+
+    if (!frameSrc) return <Spinner />;
 
     return (
         <div className='relative' style={{ width: W, height: W }}>

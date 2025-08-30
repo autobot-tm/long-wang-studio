@@ -24,9 +24,16 @@ interface Props {
     slots: Slot[];
     stageScale?: number;
 }
+
+export type CaptureOptions = {
+    pixelRatio?: number;
+    mimeType?: string; // 'image/jpeg' | 'image/png' | 'image/webp'
+    quality?: number; // 0..1 cho jpeg/webp
+};
+
 export type CanvasFrameHandle = {
     capture: () => string | null;
-    captureBlob: () => Promise<Blob | null>;
+    captureBlob: (opts?: CaptureOptions) => Promise<Blob | null>;
     captureSlot: (i: number) => string | null;
 };
 
@@ -70,15 +77,26 @@ const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
             () => ({
                 capture: () => {
                     stageRef.current?.batchDraw();
-                    const pr = 1 / (stageScale || 1); // trả về ảnh gốc 800×800
+                    const pr = 1 / (stageScale || 1);
                     return (
                         stageRef.current?.toDataURL({ pixelRatio: pr }) ?? null
                     );
                 },
-                captureBlob: async () => {
+                captureBlob: async (opts?: CaptureOptions) => {
                     stageRef.current?.batchDraw();
+
+                    const pr =
+                        (opts?.pixelRatio ??
+                            (typeof window !== 'undefined'
+                                ? window.devicePixelRatio || 2
+                                : 2)) / (stageScale || 1);
+                    const mime = opts?.mimeType ?? 'image/jpeg';
+                    const quality = opts?.quality ?? 0.92;
+
                     const uri = stageRef.current?.toDataURL({
-                        pixelRatio: 1 / (stageScale || 1),
+                        pixelRatio: pr,
+                        mimeType: mime,
+                        quality,
                     });
                     if (!uri) return null;
                     const res = await fetch(uri);
@@ -98,6 +116,9 @@ const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
                     c.width = s.width;
                     c.height = s.height;
                     const ctx = c.getContext('2d')!;
+                    // ✅ tăng chất lượng nội suy
+                    (ctx as any).imageSmoothingEnabled = true;
+                    (ctx as any).imageSmoothingQuality = 'high';
                     ctx.drawImage(img, fit.x, fit.y, fit.w, fit.h);
                     return c.toDataURL('image/png');
                 },
