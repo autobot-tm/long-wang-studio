@@ -149,7 +149,7 @@ export default function LandingTemplate() {
                             onClick={() => setIsAction(true)}
                         >
                             <span className='text-fill-pagebg !text-transparent'>
-                                BẮT ĐẦU TẠO
+                                Bắt đầu tạo
                             </span>
                         </Button>
                     )}

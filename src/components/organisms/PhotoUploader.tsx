@@ -75,7 +75,7 @@ export default function PhotoUploader({
 
                 <div className='absolute inset-0 bg-[#FFEED6] pointer-events-none' />
 
-                <div className='relative z-10 h-full w-full flex flex-col items-center justify-center gap-3 pointer-events-none text-[#AA8143] text-[8px] px-1.5 py-2'>
+                <div className='relative z-10 h-full w-full flex flex-col items-center justify-center gap-3 pointer-events-none text-[#AA8143] text-[8px] sm:text-[12px] lg:text-[16px] px-1.5 py-2'>
                     <div
                         className={clsx(
                             'flex flex-col items-center justify-center inset-6 rounded-2xl border-1 border-dashed pointer-events-none w-full h-full',
@@ -84,18 +84,16 @@ export default function PhotoUploader({
                                 : 'border-[#AA8143]'
                         )}
                     >
-                        <div className='px-2.5 py-1 rounded-full bg-[#FFEED6] border border-[#AA8143] inline-flex items-center gap-2  font-medium'>
+                        <div className='mb-1 px-2.5 py-1 rounded-full bg-[#FFEED6] border border-[#AA8143] inline-flex items-center gap-2  font-medium'>
                             <IconImage className='w-3 h-3' />
                             Thêm 01 ảnh
                         </div>
-                        <div>
-                            <div className='text-center text-[6px] leading-4 opacity-80 font-gilroy'>
-                                định dạng PNG/JPG, tối đa 2&nbsp;MB
-                                <br />
-                                <span className='text-[#6D6D6D]'>
-                                    kích thước cạnh &lt;= 1080px
-                                </span>
-                            </div>
+                        <div className='text-center leading-4 opacity-80 font-gilroy text-[6px] sm:text-[10px] lg:text-[14px]'>
+                            định dạng PNG/JPG, tối đa 2&nbsp;MB
+                            <br />
+                            <span className='text-[#6D6D6D]'>
+                                kích thước cạnh &lt;= 1080px
+                            </span>
                         </div>
                     </div>
                 </div>
