@@ -1,32 +1,22 @@
 'use client';
+import { BASE_BY_BP, getSlotsForBP } from '@/constants/slot';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Spinner } from '../ui/spinner';
 import type { CanvasFrameHandle } from './CanvasFrame';
-import PhotoUploader from './photo-uploader';
+import PhotoUploader from './PhotoUploader';
 
 const CanvasFrame = dynamic(() => import('./CanvasFrame'), { ssr: false });
-const BASE = 800;
-const SIZES = { mobile: 320, tablet: 600, desktop: 800 };
 
 export type CaptureOptions = {
     pixelRatio?: number;
     mimeType?: string;
-    quality?: number; // chỉ áp dụng cho image/jpeg|webp
+    quality?: number;
 };
 
 export default function ResponsiveFrame(props: {
     frameSrc: string;
-    slots: Array<{
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        rotation?: number;
-        cornerRadius?: number | number[];
-        scale?: number;
-    }>;
     photos: (string | null)[];
     setPhoto: (i: number, u: string | null) => void;
     onBind?: (api: {
@@ -35,61 +25,57 @@ export default function ResponsiveFrame(props: {
         captureBlob: (opts?: CaptureOptions) => Promise<Blob | null>;
     }) => void;
 }) {
-    const { frameSrc, slots, photos, setPhoto, onBind } = props;
+    const { frameSrc, photos, setPhoto, onBind } = props;
 
     const bp = useBreakpoint();
-    const W = SIZES[bp];
-    const scale = useMemo(() => W / BASE, [W]);
+    const base = BASE_BY_BP[bp];
+    const deviceSlots = getSlotsForBP(bp);
     const frameRef = useRef<CanvasFrameHandle>(null);
 
-    onBind?.({
-        capture: () => frameRef.current!.capture(),
-        captureSlot: (i: number) => frameRef.current!.captureSlot(i),
-        captureBlob: (opts?: CaptureOptions) =>
-            frameRef.current!.captureBlob(opts), // ✅
-    });
-
-    // tránh phụ thuộc vào ref.current trong deps
     useEffect(() => {
-        if (onBind && frameRef.current) {
-            onBind({
-                capture: () => frameRef.current!.capture(),
-                captureSlot: i => frameRef.current!.captureSlot(i),
-                captureBlob: (opts?: CaptureOptions) =>
-                    frameRef.current!.captureBlob(opts),
-            });
-        }
-    }, [onBind, scale]);
+        if (frameRef.current && onBind) onBind(frameRef.current);
+    }, [onBind, base]);
 
     if (!frameSrc) return <Spinner />;
 
     return (
-        <div className='relative' style={{ width: W, height: W }}>
+        <div className='relative' style={{ width: base, height: base }}>
             <CanvasFrame
                 ref={frameRef}
-                width={BASE}
-                height={BASE}
+                width={base}
+                height={base}
                 frameSrc={frameSrc}
                 photos={photos}
-                slots={slots}
-                stageScale={scale}
+                slots={deviceSlots}
+                stageScale={1}
             />
-            {slots.map((s, i) =>
+            {deviceSlots.map((s, i) =>
                 !photos[i] ? (
-                    <PhotoUploader
+                    <div
                         key={i}
-                        // vị trí vẫn nhân scale để đặt đúng tọa độ
-                        slot={{
-                            x: s.x * scale,
-                            y: s.y * scale,
+                        style={{
+                            position: 'absolute',
+                            left: s.x,
+                            top: s.y,
                             width: s.width,
                             height: s.height,
-                            rotation: s.rotation,
+                            transform: `rotate(${s.rotation || 0}deg)`,
+                            transformOrigin: 'top left',
                         }}
-                        scale={scale} // ✅ scale toàn bộ UI bên trong
-                        index={i}
-                        onSet={(idx, url) => setPhoto(idx, url)}
-                    />
+                    >
+                        <PhotoUploader
+                            slot={{
+                                x: 0,
+                                y: 0,
+                                width: s.width,
+                                height: s.height,
+                                rotation: 0,
+                            }}
+                            index={i}
+                            onSet={(idx, url) => setPhoto(idx, url)}
+                            scale={1}
+                        />
+                    </div>
                 ) : null
             )}
         </div>

@@ -1,137 +1,194 @@
 'use client';
-import { Dialog } from '@/components/ui/dialog';
-import { uploadImage } from '@/services/api/image.service';
-import { dataUrlToFile } from '@/utils/dataUrlToFile';
-import { buildShareUrl, tryNativeShare } from '@/utils/share';
-import {
-    hashPhoto,
-    loadCacheFromStorage,
-    persistCache,
-    shareCache,
-} from '@/utils/share-upload-once';
-import { ArrowBigRight } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import FrameDialogContent from '../molecules/FrameDialogContent';
-import { Button } from '../ui/button';
-import { Spinner } from '../ui/spinner';
+
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { SLOT_SHARE } from '@/constants/slot';
+import { downloadOrOpen } from '@/utils/device';
+import { buildSharer } from '@/utils/share';
+import { useEffect, useRef, useState } from 'react';
+import { Group, Image as KImage, Layer, Stage } from 'react-konva';
+
+const SLOT_BASE = { w: 960, h: 1280 } as const;
+
+const loadImage = (src?: string) =>
+    new Promise<HTMLImageElement | null>(r => {
+        if (!src) return r(null);
+        const i = new Image();
+        i.crossOrigin = 'anonymous';
+        i.decoding = 'async';
+        i.src = src;
+        i.onload = () => r(i);
+        i.onerror = () => r(null);
+    });
+
+const cover = (bw: number, bh: number, iw: number, ih: number) => {
+    const s = Math.max(bw / iw, bh / ih);
+    const w = iw * s,
+        h = ih * s;
+    return { x: (bw - w) / 2, y: (bh - h) / 2, w, h };
+};
 
 export default function ShareDialog({
     open,
     onOpenChange,
     photo,
+    frameSrc = '/images/frame-share.png',
 }: {
     open: boolean;
     onOpenChange: (v: boolean) => void;
     photo: string;
+    frameSrc?: string;
 }) {
-    const BASE_W = 960,
-        BASE_H = 1280;
-    const SLOT = { x: 124, y: 457, w: 498, h: 498, rotation: -4 };
-    const pct = (v: number, base: number) => `${(v / base) * 100}%`;
-    const [loading, setLoading] = useState(false);
-    const abortRef = useRef<AbortController | null>(null);
-
-    const overlay = useMemo(
-        () =>
-            !photo ? null : (
-                <div
-                    className='absolute overflow-hidden'
-                    style={{
-                        left: pct(SLOT.x, BASE_W),
-                        top: pct(SLOT.y, BASE_H),
-                        width: pct(SLOT.w, BASE_W),
-                        height: pct(SLOT.h, BASE_H),
-                        transform: `rotate(${SLOT.rotation}deg)`,
-                        transformOrigin: 'top left',
-                    }}
-                >
-                    <img
-                        src={photo}
-                        alt=''
-                        className='w-full h-full object-cover'
-                    />
-                </div>
-            ),
-        [photo]
-    );
+    const [frameImg, setFrameImg] = useState<HTMLImageElement | null>(null);
+    const [overlayImg, setOverlayImg] = useState<HTMLImageElement | null>(null);
 
     useEffect(() => {
-        loadCacheFromStorage();
-        return () => {
-            // đóng dialog -> hủy upload
-            abortRef.current?.abort();
-            abortRef.current = null;
+        loadImage(frameSrc).then(setFrameImg);
+    }, [frameSrc]);
+    useEffect(() => {
+        loadImage(photo).then(setOverlayImg);
+    }, [photo]);
+
+    const FW = frameImg?.naturalWidth ?? SLOT_BASE.w;
+    const FH = frameImg?.naturalHeight ?? SLOT_BASE.h;
+
+    const [scale, setScale] = useState(1);
+    useEffect(() => {
+        const calc = () => {
+            const vw =
+                (window.visualViewport?.width ?? window.innerWidth) * 0.9;
+            const vh =
+                (window.visualViewport?.height ?? window.innerHeight) * 0.9;
+            setScale(Math.min(vw / FW, vh / FH));
         };
-    }, []);
+        calc();
+        const onR = () => calc();
+        window.addEventListener('resize', onR, { passive: true });
+        window.visualViewport?.addEventListener('resize', onR, {
+            passive: true,
+        });
+        return () => {
+            window.removeEventListener('resize', onR);
+            window.visualViewport?.removeEventListener('resize', onR);
+        };
+    }, [FW, FH]);
 
-    const shareFacebook = async (url: string) => {
-        if (!url) return;
+    const rx = FW / SLOT_BASE.w,
+        ry = FH / SLOT_BASE.h;
+    const slotW = SLOT_SHARE.w * rx,
+        slotH = SLOT_SHARE.h * ry;
+    const cx = SLOT_SHARE.x * rx + slotW / 2;
+    const cy = SLOT_SHARE.y * ry + slotH / 2;
+    const rot = SLOT_SHARE.rotation ?? 0;
 
-        const link = buildShareUrl('facebook', url);
-        if (link) {
-            // Mở cửa sổ Facebook share
-            window.open(link, '_blank', 'noopener,noreferrer');
-            return;
-        }
+    const fit = overlayImg
+        ? cover(slotW, slotH, overlayImg.naturalWidth, overlayImg.naturalHeight)
+        : null;
 
-        // fallback: Web Share API (native mobile)
-        await tryNativeShare(url);
-    };
+    const stageRef = useRef<any>(null);
+    useEffect(() => {
+        stageRef.current?.batchDraw();
+    }, [FW, FH, scale, overlayImg, rx, ry]);
 
-    const handleShare = async () => {
-        if (!photo || loading) return;
-        setLoading(true);
-        try {
-            const key = await hashPhoto(photo);
-            const cached = shareCache.get(key);
-            if (cached) {
-                await shareFacebook(cached);
-                return;
-            }
-
-            const controller = new AbortController();
-            abortRef.current = controller;
-
-            const file = await dataUrlToFile(photo, 'share.png');
-            const res = await uploadImage(file, {
-                tags: 'landing-share',
-                isPublic: true,
-            });
-
-            if (res.success && res.data?.url) {
-                shareCache.set(key, res.data.url);
-                persistCache();
-                await shareFacebook(res.data.url);
-            } else {
-                toast.error(res.message ?? 'Upload ảnh thất bại.');
-            }
-        } catch {
-            toast.error('Có lỗi không xác định trong quá trình chia sẻ.');
-        } finally {
-            setLoading(false);
-            abortRef.current = null;
-        }
-    };
+    const BLEED = 2;
+    const bx = (fit ? fit.x : 0) - slotW / 2 - BLEED / 2;
+    const by = (fit ? fit.y : 0) - slotH / 2 - BLEED / 2;
+    const bw = (fit ? fit.w : 0) + BLEED;
+    const bh = (fit ? fit.h : 0) + BLEED;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <FrameDialogContent
-                frameSrc='/images/frame-share.png'
-                zIndex={70}
-                overlay={overlay}
+            <DialogContent
+                className='p-0 bg-transparent border-0 shadow-none w-auto max-w-none'
+                fitContent
+                centerByGrid
             >
-                <Button
-                    variant='cta'
-                    size='xl'
-                    className='flex items-center gap-2 text-[#F6F2D7]'
-                    onClick={handleShare}
-                    disabled={!photo || loading}
+                <div
+                    className='relative mx-auto'
+                    style={{ width: FW * scale, height: FH * scale }}
                 >
-                    <span>{loading ? <Spinner size={32} /> : 'Chia sẻ'}</span>
-                    {!loading && <ArrowBigRight size={40} fill='#F6F2D7' />}
-                </Button>
-            </FrameDialogContent>
+                    <div
+                        style={{
+                            width: FW,
+                            height: FH,
+                            transform: `scale(${scale})`,
+                            transformOrigin: 'top left',
+                        }}
+                    >
+                        <Stage
+                            ref={stageRef}
+                            width={FW}
+                            height={FH}
+                            listening={false}
+                            style={{ display: 'block' }}
+                        >
+                            <Layer listening={false} hitGraphEnabled={false}>
+                                {overlayImg && fit && (
+                                    <Group
+                                        x={cx}
+                                        y={cy}
+                                        rotation={rot}
+                                        offsetX={slotW / 2}
+                                        offsetY={slotH / 2}
+                                        clipX={-slotW / 2}
+                                        clipY={-slotH / 2}
+                                        clipWidth={slotW}
+                                        clipHeight={slotH}
+                                    >
+                                        <KImage
+                                            image={overlayImg}
+                                            x={bx}
+                                            y={by}
+                                            width={bw}
+                                            height={bh}
+                                        />
+                                    </Group>
+                                )}
+                            </Layer>
+
+                            <Layer listening={false} hitGraphEnabled={false}>
+                                {frameImg && (
+                                    <KImage
+                                        image={frameImg}
+                                        x={0}
+                                        y={0}
+                                        width={FW}
+                                        height={FH}
+                                    />
+                                )}
+                            </Layer>
+                        </Stage>
+                    </div>
+
+                    <div className='absolute inset-x-0 bottom-10 flex justify-center gap-3 z-[5] pointer-events-auto'>
+                        <Button
+                            variant='cta'
+                            size='xl'
+                            onClick={() =>
+                                downloadOrOpen(photo, 'mien-ky-uc.jpg')
+                            }
+                        >
+                            Tải xuống
+                        </Button>
+                        <Button
+                            variant='cta'
+                            size='xl'
+                            onClick={() => {
+                                const u = buildSharer(photo);
+                                const p = window.open(
+                                    '_blank',
+                                    'noopener,noreferrer'
+                                );
+                                if (p) p.location.href = u;
+                                else window.location.href = u;
+                            }}
+                        >
+                            Chia sẻ
+                        </Button>
+                    </div>
+                    <div className='h-16' />
+                </div>
+            </DialogContent>
         </Dialog>
     );
 }

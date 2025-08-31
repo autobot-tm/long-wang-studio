@@ -14,7 +14,6 @@ export async function uploadImage(
     const form = new FormData();
     form.append('File', file);
     if (opts?.tags) form.append('Tags', opts.tags);
-    form.append('IsPublic', String(opts?.isPublic ?? true));
 
     try {
         const res = await axiosClient.post<ApiResponse<UploadResult>>(

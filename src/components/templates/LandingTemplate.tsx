@@ -1,36 +1,31 @@
 'use client';
 
-import { ArrowBigDown, ArrowBigRight } from 'lucide-react';
+import { ArrowBigRight } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useCallback, useRef, useState } from 'react';
 import Logo from '../atoms/Logo';
-
 import MaskedIcon from '../atoms/MaskedIcon';
 import BackgroundProvider from '../organisms/BackgroundProvider';
 import ResponsiveFrame from '../organisms/ResponsiveFrame';
-import ShareDialog from '../organisms/ShareDialog';
+import { ensureUploadedUrl } from '../organisms/ShareDownloadOnce';
 import { Button } from '../ui/button';
+import { Spinner } from '../ui/spinner';
 
-const slots = [
-    {
-        x: 88,
-        y: 335,
-        width: 275,
-        height: 280,
-        rotation: 4.2,
-        cornerRadius: 0,
-        scale: 0.68,
-    },
-    {
-        x: 405,
-        y: 150,
-        width: 288,
-        height: 285,
-        rotation: -5.8,
-        cornerRadius: 0,
-        scale: 0.68,
-    },
-];
+const ShareDialog = dynamic(() => import('../organisms/ShareDialog'), {
+    ssr: false,
+    loading: () => <Spinner size={24} />,
+});
+
+type CaptureAPI = {
+    capture: () => string | null;
+    captureSlot: (i: number) => string | null;
+    captureBlob: (opts?: {
+        pixelRatio?: number;
+        mimeType?: string;
+        quality?: number;
+    }) => Promise<Blob | null>;
+};
 
 export default function LandingTemplate() {
     const [isAction, setIsAction] = useState(false);
@@ -38,38 +33,33 @@ export default function LandingTemplate() {
     const [photo2, setPhoto2] = useState<string | null>(null);
     const [openShare, setOpenShare] = useState(false);
     const [sharePhoto, setSharePhoto] = useState<string | null>(null);
-    const apiRef = useRef<{
-        capture: () => string | null;
-        captureSlot: (i: number) => string | null;
-        captureBlob: () => Promise<Blob | null>;
-    } | null>(null);
+    const [isPreparing, setIsPreparing] = useState(false);
+    const apiRef = useRef<CaptureAPI | null>(null);
 
     const handleSetPhoto = useCallback((i: number, url: string | null) => {
         if (i === 0) setPhoto1(url);
         else if (i === 1) setPhoto2(url);
     }, []);
 
-    async function handleDownload() {
-        const blob = await apiRef.current?.captureBlob();
-        if (!blob) return;
+    async function handleOpenShare() {
+        setIsPreparing(true);
+        try {
+            const dataUrl = apiRef.current?.capture();
+            const blob = await apiRef.current?.captureBlob?.({
+                pixelRatio: Math.max(window.devicePixelRatio || 2, 2),
+                mimeType: 'image/jpeg',
+                quality: 0.92,
+            });
+            if (!dataUrl || !blob) throw new Error('capture failed');
 
-        const file = new File([blob], 'mien-ky-uc.png', { type: 'image/png' });
-
-        // A. Mobile: Web Share (nếu hỗ trợ chia sẻ file)
-        if (navigator.canShare?.({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'Miền Ký Ức' });
-            return;
+            const publicUrl = await ensureUploadedUrl(dataUrl, blob);
+            setSharePhoto(publicUrl);
+            setOpenShare(true);
+        } catch (e) {
+            console.warn('prepare share failed', e);
+        } finally {
+            setIsPreparing(false);
         }
-
-        // B. Fallback: download bằng <a download>
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'mien-ky-uc.png';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
     }
 
     return (
@@ -82,17 +72,6 @@ export default function LandingTemplate() {
         >
             <div className='max-w-6xl w-full px-4 py-12 flex flex-col items-center'>
                 <Logo />
-                {/* <h1
-                    className='text-emerald-900 text-[74px] md:text-[154px] font-bold tracking-wide font-americana text-center mt-[18px]'
-                    style={{
-                        background:
-                            'linear-gradient(90deg, #005841 0%, #017255 38%, #005841 75%, #017255 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                    }}
-                >
-                    MIỀN KÝ ỨC
-                </h1> */}
                 <Image
                     src='/images/header.png'
                     alt='header-landing'
@@ -101,14 +80,7 @@ export default function LandingTemplate() {
                     className='object-cover'
                     priority
                 />
-                <p
-                    className='
-                                text-[24px] md:text-[42px]
-                                text-[#AA8143] mt-4 font-gilroy
-                                max-w-[500px] text-center
-                                leading-[1.3] md:leading-[1.15]
-                            '
-                >
+                <p className='text-[24px] md:text-[42px] text-[#AA8143] mt-4 font-gilroy max-w-[500px] text-center leading-[1.3] md:leading-[1.15]'>
                     Ngày tái ngộ đáng nhớ từ hoài niệm thân thương
                 </p>
 
@@ -117,7 +89,6 @@ export default function LandingTemplate() {
                         <div className='relative width-[800px] height-[800px]'>
                             <ResponsiveFrame
                                 frameSrc='/images/frame-section.png'
-                                slots={slots}
                                 photos={[photo1, photo2]}
                                 setPhoto={handleSetPhoto}
                                 onBind={api => {
@@ -140,46 +111,30 @@ export default function LandingTemplate() {
                 <div className='flex gap-6 mt-16'>
                     {isAction ? (
                         <>
-                            <Button
-                                variant='cta'
-                                size='xl'
-                                textBg='var(--page-bg)'
-                                disabled={!photo1 || !photo2}
-                                onClick={handleDownload}
-                            >
-                                <span className='text-fill-pagebg !text-transparent'>
-                                    Tải xuống
-                                </span>
-                                <MaskedIcon
-                                    Icon={ArrowBigDown}
-                                    sizeCSS='1em'
-                                    className='ml-2'
-                                />
-                            </Button>
-                            <Button
-                                variant='cta'
-                                size='xl'
-                                className='flex items-center gap-2'
-                                textBg='var(--page-bg)'
-                                disabled={!photo1 || !photo2}
-                                onClick={() => {
-                                    const url = apiRef.current?.capture();
+                            <div className='flex gap-6 relative z-20'>
+                                <Button
+                                    variant='cta'
+                                    size='xl'
+                                    textBg='var(--page-bg)'
+                                    disabled={!photo1 || !photo2 || isPreparing}
+                                    onClick={handleOpenShare}
+                                    className='flex items-center gap-2 [touch-action:manipulation]'
+                                >
+                                    <span className='text-fill-pagebg !text-transparent'>
+                                        {isPreparing
+                                            ? 'Đang chuẩn bị…'
+                                            : 'Chia sẻ'}
+                                    </span>
+                                    {!isPreparing && (
+                                        <MaskedIcon
+                                            Icon={ArrowBigRight}
+                                            sizeCSS='1em'
+                                            className='ml-2'
+                                        />
+                                    )}
+                                </Button>
+                            </div>
 
-                                    if (url) {
-                                        setSharePhoto(url);
-                                        setOpenShare(true);
-                                    }
-                                }}
-                            >
-                                <span className='text-fill-pagebg !text-transparent'>
-                                    Chia sẻ{' '}
-                                </span>
-                                <MaskedIcon
-                                    Icon={ArrowBigRight}
-                                    sizeCSS='1em'
-                                    className='ml-2'
-                                />
-                            </Button>
                             <ShareDialog
                                 photo={sharePhoto || ''}
                                 open={openShare}
@@ -191,7 +146,7 @@ export default function LandingTemplate() {
                             variant='cta'
                             size='xl'
                             textBg='var(--page-bg)'
-                            onClick={() => setIsAction(!isAction)}
+                            onClick={() => setIsAction(true)}
                         >
                             <span className='text-fill-pagebg !text-transparent'>
                                 BẮT ĐẦU TẠO

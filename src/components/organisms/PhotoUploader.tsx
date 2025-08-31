@@ -51,17 +51,14 @@ export default function PhotoUploader({
                 style={{
                     left: slot.x,
                     top: slot.y,
-                    // kích thước gốc (px) không đổi để không méo chi tiết
                     width: slot.width,
                     height: slot.height,
-                    // scale + rotate toàn khối để đồng nhất mọi thành phần
                     transform: `translateZ(0) rotate(${rot}deg) scale(${scale})`,
                     transformOrigin: 'top left',
                     willChange: 'transform',
                     zIndex: 30,
                 }}
             >
-                {/* hit area */}
                 <input
                     type='file'
                     accept='image/*'
@@ -76,28 +73,30 @@ export default function PhotoUploader({
                     aria-label={`Thêm hình ${index + 1}`}
                 />
 
-                {/* nền */}
                 <div className='absolute inset-0 bg-[#FFEED6] pointer-events-none' />
 
-                {/* nét đứt */}
-                <div
-                    className={clsx(
-                        'absolute inset-6 rounded-2xl border-2 border-dashed pointer-events-none',
-                        isDragActive ? 'border-amber-600' : 'border-[#AA8143]'
-                    )}
-                />
-
-                {/* nội dung */}
-                <div className='relative z-10 h-full w-full flex flex-col items-center justify-center gap-3 pointer-events-none text-[#AA8143]'>
-                    <div className='px-3 py-1.5 rounded-full bg-[#FFEED6] border border-[#AA8143] inline-flex items-center gap-2 text-[14px] font-medium'>
-                        <IconImage className='w-4 h-4' /> Thêm 01 ảnh
-                    </div>
-                    <div className='text-center text-[12px] leading-4 opacity-80 font-gilroy'>
-                        định dạng PNG/JPG, tối đa 2&nbsp;MB
-                        <br />
-                        <span className='text-[#6D6D6D]'>
-                            kích thước cạnh &lt;= 1080px
-                        </span>
+                <div className='relative z-10 h-full w-full flex flex-col items-center justify-center gap-3 pointer-events-none text-[#AA8143] text-[8px] px-1.5 py-2'>
+                    <div
+                        className={clsx(
+                            'flex flex-col items-center justify-center inset-6 rounded-2xl border-1 border-dashed pointer-events-none w-full h-full',
+                            isDragActive
+                                ? 'border-amber-600'
+                                : 'border-[#AA8143]'
+                        )}
+                    >
+                        <div className='px-2.5 py-1 rounded-full bg-[#FFEED6] border border-[#AA8143] inline-flex items-center gap-2  font-medium'>
+                            <IconImage className='w-3 h-3' />
+                            Thêm 01 ảnh
+                        </div>
+                        <div>
+                            <div className='text-center text-[6px] leading-4 opacity-80 font-gilroy'>
+                                định dạng PNG/JPG, tối đa 2&nbsp;MB
+                                <br />
+                                <span className='text-[#6D6D6D]'>
+                                    kích thước cạnh &lt;= 1080px
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
