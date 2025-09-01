@@ -62,7 +62,7 @@ function DialogContent({
     zIndex?: number;
 }) {
     const base = cn(
-        'bg-background grid gap-4 rounded-lg border p-6 shadow-lg duration-200',
+        'bg-background grid gap-4 rounded-xs border p-6 shadow-lg duration-200',
         fitContent &&
             'w-auto max-w-none p-0 shadow-none border-0 bg-transparent'
     );
