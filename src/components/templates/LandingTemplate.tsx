@@ -1,10 +1,11 @@
 'use client';
 
+import { useBackgroundAssets } from '@/hooks/useBackgroundAssets';
 import { useImageReady } from '@/hooks/useImageReady';
 import { ArrowBigRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Logo from '../atoms/Logo';
 import MaskedIcon from '../atoms/MaskedIcon';
 import BackgroundProvider from '../organisms/BackgroundProvider';
@@ -17,7 +18,6 @@ const ShareDialog = dynamic(() => import('../organisms/ShareDialog'), {
     ssr: false,
     loading: () => '',
 });
-
 const ResponsiveFrame = dynamic(() => import('../organisms/ResponsiveFrame'), {
     ssr: false,
     loading: () => (
@@ -37,6 +37,8 @@ type CaptureAPI = {
     }) => Promise<Blob | null>;
 };
 
+const DEFAULT_BG = '/images/landing-background.png';
+
 export default function LandingTemplate() {
     const [isAction, setIsAction] = useState(false);
     const [photo1, setPhoto1] = useState<string | null>(null);
@@ -44,16 +46,27 @@ export default function LandingTemplate() {
     const [openShare, setOpenShare] = useState(false);
     const [sharePhoto, setSharePhoto] = useState<string | null>(null);
     const [isPreparing, setIsPreparing] = useState(false);
+    const [resolvedBg, setResolvedBg] = useState(DEFAULT_BG);
     const apiRef = useRef<CaptureAPI | null>(null);
 
-    const bgUrl = `url('/images/landing-background.png')`;
-    const bgRaw = `/images/landing-background.png`;
-    const bgReady = useImageReady(bgRaw);
+    // 1) Lấy background từ API
+    const bgQ = useBackgroundAssets();
+    const serverBg = bgQ?.data?.data?.[0]?.url ?? null;
+    const bgSrc = useMemo(() => serverBg ?? DEFAULT_BG, [serverBg]);
+
+    // 2) Preload ảnh
+    const serverReady = useImageReady(serverBg || '');
     const headerReady = useImageReady('/images/header.png');
     const previewReady = useImageReady(
         '/images/landing-page-frame-preview.png'
     );
-    const appReady = bgReady && headerReady && previewReady;
+
+    useEffect(() => {
+        if (serverBg && serverReady) setResolvedBg(serverBg);
+    }, [serverBg, serverReady]);
+
+    // App sẵn sàng khi ảnh tĩnh đã sẵn sàng + nếu có serverBg thì chờ preload xong
+    const appReady = headerReady && previewReady && (!serverBg || serverReady);
 
     const handleSetPhoto = useCallback((i: number, url: string | null) => {
         if (i === 0) setPhoto1(url);
@@ -70,12 +83,9 @@ export default function LandingTemplate() {
                 quality: 0.92,
             });
             if (!dataUrl || !blob) throw new Error('capture failed');
-
             const publicUrl = await ensureUploadedUrl(dataUrl, blob);
             setSharePhoto(publicUrl);
             setOpenShare(true);
-        } catch (e) {
-            console.warn('prepare share failed', e);
         } finally {
             setIsPreparing(false);
         }
@@ -84,10 +94,9 @@ export default function LandingTemplate() {
     return (
         <>
             {!appReady && <SplashScreen />}
-
             <BackgroundProvider
                 as='section'
-                bg={bgUrl}
+                bg={`url('${resolvedBg}')`}
                 paint
                 fixed
                 fadeIn
@@ -115,9 +124,7 @@ export default function LandingTemplate() {
                                     frameSrc='/images/frame-section.png'
                                     photos={[photo1, photo2]}
                                     setPhoto={handleSetPhoto}
-                                    onBind={api => {
-                                        apiRef.current = api;
-                                    }}
+                                    onBind={api => (apiRef.current = api)}
                                 />
                             </div>
                         ) : (

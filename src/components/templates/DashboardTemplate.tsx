@@ -24,6 +24,7 @@ export default function DashboardTemplate() {
             <BackgroundProvider
                 bg={`url('${bg}')`}
                 fadeIn
+                fixed
                 ready={bgQ.isSuccess}
             >
                 <Navbar />

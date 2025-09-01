@@ -1,11 +1,14 @@
-import Provider from '@/components/providers';
+import AppQueryProvider from '@/components/providers/query-client';
+import AppSessionProvider from '@/components/providers/session';
 import AuthGuard from '@/hocs/AuthGuard';
 
 const Layout = async ({ children }: { children: React.ReactNode }) => {
     return (
-        <Provider>
-            <AuthGuard>{children}</AuthGuard>
-        </Provider>
+        <AppSessionProvider>
+            <AppQueryProvider>
+                <AuthGuard>{children}</AuthGuard>
+            </AppQueryProvider>
+        </AppSessionProvider>
     );
 };
 
