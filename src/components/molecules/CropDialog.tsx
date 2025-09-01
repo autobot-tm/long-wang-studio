@@ -1,10 +1,10 @@
+// components/molecules/CropDialog.tsx
 'use client';
 
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
@@ -36,12 +36,13 @@ export default function CropDialog({
     aspect?: number;
 }) {
     const isMobile = useIsMobile();
-    const allowRotate = !isMobile; // ⛔ chặn rotate trên mobile
+    const allowRotate = !isMobile;
 
     const [zoom, setZoom] = useState(1);
     const [rot, setRot] = useState(0);
     const [area, setArea] = useState<CropArea | null>(null);
     const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const [submitting, setSubmitting] = useState(false);
 
     const objectUrlRef = useRef<string | null>(null);
     const imgUrl = useMemo(() => {
@@ -52,25 +53,26 @@ export default function CropDialog({
     }, [file]);
 
     useEffect(() => {
-        // reset khi mở ảnh mới
         setZoom(1);
         setRot(0);
         setCrop({ x: 0, y: 0 });
         setArea(null);
+        setSubmitting(false);
     }, [imgUrl]);
 
-    useEffect(() => {
-        // cleanup objectURL khi đóng/đổi ảnh
-        return () => {
+    useEffect(
+        () => () => {
             if (objectUrlRef.current) {
                 URL.revokeObjectURL(objectUrlRef.current);
                 objectUrlRef.current = null;
             }
-        };
-    }, [imgUrl]);
+        },
+        [imgUrl]
+    );
 
     async function handleDone() {
-        if (!file || !area) return;
+        if (submitting || !file || !area) return;
+        setSubmitting(true);
 
         const img = await new Promise<HTMLImageElement>(resolve => {
             const i = new Image();
@@ -81,29 +83,25 @@ export default function CropDialog({
         });
 
         const { width, height, x, y } = area;
-
-        // Canvas xuất ảnh đã crop
         const c = document.createElement('canvas');
         const ctx = c.getContext('2d')!;
         c.width = Math.round(width);
         c.height = Math.round(height);
 
-        // ⛔ Chặn rotate trên mobile (rotation = 0)
         const rotation = allowRotate ? rot : 0;
-
         if (rotation) {
             ctx.translate(c.width / 2, c.height / 2);
             ctx.rotate((rotation * Math.PI) / 180);
             ctx.translate(-c.width / 2, -c.height / 2);
         }
 
-        // Vẽ phần đã crop
         ctx.imageSmoothingEnabled = true;
         // @ts-ignore
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, x, y, width, height, 0, 0, c.width, c.height);
 
         onDone(c.toDataURL('image/jpeg', 0.92));
+        setSubmitting(false);
     }
 
     return (
@@ -113,43 +111,66 @@ export default function CropDialog({
                 zIndex={380}
                 centerByGrid
             >
-                <DialogHeader>
-                    <DialogTitle>Chỉnh ảnh</DialogTitle>
-                </DialogHeader>
+                <div className='flex flex-col gap-3 max-h-[85dvh] sm:max-h-[80vh]'>
+                    <DialogHeader>
+                        <DialogTitle>Chỉnh ảnh</DialogTitle>
+                    </DialogHeader>
 
-                <div className='relative h-[360px] rounded-xs overflow-hidden bg-[#F6F2D7]'>
-                    <Cropper
-                        image={imgUrl}
-                        aspect={aspect}
-                        crop={crop}
-                        onCropChange={setCrop}
-                        zoom={zoom}
-                        rotation={allowRotate ? rot : 0} // ⛔ cố định 0 trên mobile
-                        onZoomChange={z => setZoom(z)}
-                        onRotationChange={
-                            allowRotate ? r => setRot(r) : undefined
-                        } // ⛔ không cho đổi rotation
-                        restrictPosition
-                        onCropComplete={(_, px) => setArea(px as CropArea)}
-                    />
-                </div>
+                    <div className='relative flex-1 min-h-[320px] rounded-xs overflow-hidden bg-[#F6F2D7]'>
+                        <Cropper
+                            image={imgUrl}
+                            aspect={aspect}
+                            crop={crop}
+                            onCropChange={setCrop}
+                            zoom={zoom}
+                            rotation={allowRotate ? rot : 0}
+                            onZoomChange={z => setZoom(z)}
+                            onRotationChange={
+                                allowRotate ? r => setRot(r) : undefined
+                            }
+                            restrictPosition
+                            onCropComplete={(_, px) => setArea(px as CropArea)}
+                        />
+                    </div>
 
-                <div className='space-y-2'>
-                    <div className='text-sm'>Zoom</div>
-                    <Slider
-                        min={1}
-                        max={3}
-                        step={0.01}
-                        value={[zoom]}
-                        onValueChange={v => setZoom(v[0])}
-                    />
+                    <div className='space-y-2'>
+                        <div className='text-sm'>Zoom</div>
+                        <Slider
+                            min={1}
+                            max={3}
+                            step={0.01}
+                            value={[zoom]}
+                            onValueChange={v => setZoom(v[0])}
+                        />
+                    </div>
+
+                    <div
+                        className='sticky bottom-0 left-0 right-0 z-10 bg-background/95 backdrop-blur 
+                       border-t pt-3 pb-[max(10px,env(safe-area-inset-bottom))]'
+                    >
+                        <div className='flex flex-row justify-end gap-3'>
+                            <Button
+                                variant='outline'
+                                size='sm'
+                                fullMobile
+                                onClick={onClose}
+                                className='hover:opacity-80 transition'
+                            >
+                                Hủy
+                            </Button>
+                            <Button
+                                variant='cta'
+                                size='sm'
+                                fullMobile
+                                disabled={submitting || !area}
+                                onClick={handleDone}
+                                className='hover:opacity-90 transition'
+                            >
+                                {submitting ? 'Đang xử lý...' : 'Dùng ảnh này'}
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-                <DialogFooter>
-                    <Button variant='outline' onClick={onClose}>
-                        Hủy
-                    </Button>
-                    <Button onClick={handleDone}>Dùng ảnh này</Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

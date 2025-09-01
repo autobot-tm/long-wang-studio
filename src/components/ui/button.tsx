@@ -91,6 +91,7 @@ function Button({
     return (
         <Comp
             data-slot='button'
+            type={(props as any).type ?? 'button'}
             className={cn(
                 buttonVariants({ variant, size, fullMobile }),
                 className

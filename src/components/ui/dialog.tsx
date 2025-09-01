@@ -72,7 +72,7 @@ function DialogContent({
             <button
                 type='button'
                 aria-label='Close'
-                className='absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/40 pointer-events-auto'
+                className='absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/40 pointer-events-auto cursor-pointer'
                 style={{
                     zIndex: (zIndex ?? 60) + 3,
                     WebkitTapHighlightColor: 'transparent',

@@ -1,6 +1,8 @@
 'use client';
+
 import { BASE_BY_BP, getSlotsForBP } from '@/constants/slot';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { X as XIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
 import { Spinner } from '../ui/spinner';
@@ -49,17 +51,58 @@ export default function ResponsiveFrame(props: {
                 slots={deviceSlots}
                 stageScale={1}
             />
-            {deviceSlots.map((s, i) =>
-                !photos[i] ? (
+
+            {deviceSlots.map((s, i) => {
+                const rot = s.rotation || 0;
+
+                if (photos[i]) {
+                    return (
+                        <div
+                            key={`close-${i}`}
+                            style={{
+                                position: 'absolute',
+                                left: s.x,
+                                top: s.y,
+                                width: s.width,
+                                height: s.height,
+                                transform: `rotate(${rot}deg)`,
+                                transformOrigin: 'top left',
+                                zIndex: 40,
+                            }}
+                        >
+                            <button
+                                type='button'
+                                aria-label={`Xóa ảnh ${i + 1}`}
+                                onClick={e => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setPhoto(i, null);
+                                }}
+                                className='absolute -top-2 -right-2 inline-flex items-center justify-center rounded-full border shadow-sm
+                           bg-white/70 text-black/70 border-white/80 hover:bg-white/80 hover:text-black cursor-pointer
+                           backdrop-blur-sm transition-opacity'
+                                style={{
+                                    width: 28,
+                                    height: 28,
+                                    WebkitTapHighlightColor: 'transparent',
+                                }}
+                            >
+                                <XIcon className='w-4 h-4' />
+                            </button>
+                        </div>
+                    );
+                }
+
+                return (
                     <div
-                        key={i}
+                        key={`uploader-${i}`}
                         style={{
                             position: 'absolute',
                             left: s.x,
                             top: s.y,
                             width: s.width,
                             height: s.height,
-                            transform: `rotate(${s.rotation || 0}deg)`,
+                            transform: `rotate(${rot}deg)`,
                             transformOrigin: 'top left',
                         }}
                     >
@@ -76,8 +119,8 @@ export default function ResponsiveFrame(props: {
                             scale={1}
                         />
                     </div>
-                ) : null
-            )}
+                );
+            })}
         </div>
     );
 }
