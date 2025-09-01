@@ -1,30 +1,41 @@
+// components/organisms/ShareDialog.tsx
 'use client';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { SLOT_SHARE } from '@/constants/slot';
 import { downloadOrOpen } from '@/utils/device';
-import { buildSharer } from '@/utils/share';
-import { useEffect, useRef, useState } from 'react';
+import { shareImageOrDeepLink } from '@/utils/share';
+import Konva from 'konva';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Group, Image as KImage, Layer, Stage } from 'react-konva';
 
 const SLOT_BASE = { w: 960, h: 1280 } as const;
+const isIOS = () =>
+    typeof navigator !== 'undefined' &&
+    /iP(hone|ad|od)|iOS/.test(navigator.userAgent);
 
 const loadImage = (src?: string) =>
-    new Promise<HTMLImageElement | null>(r => {
-        if (!src) return r(null);
-        const i = new Image();
-        i.crossOrigin = 'anonymous';
-        i.decoding = 'async';
-        i.src = src;
-        i.onload = () => r(i);
-        i.onerror = () => r(null);
+    new Promise<HTMLImageElement | null>(resolve => {
+        if (!src) return resolve(null);
+        const sameOrigin =
+            typeof window !== 'undefined' &&
+            (src.startsWith('/') || src.startsWith(window.location.origin));
+        const tryLoad = (xo?: 'anonymous') => {
+            const i = new Image();
+            if (xo) i.crossOrigin = xo;
+            i.decoding = 'async';
+            i.src = src;
+            i.onload = () => resolve(i);
+            i.onerror = () => (xo ? tryLoad(undefined) : resolve(null));
+        };
+        sameOrigin ? tryLoad(undefined) : tryLoad('anonymous');
     });
 
 const cover = (bw: number, bh: number, iw: number, ih: number) => {
     const s = Math.max(bw / iw, bh / ih);
-    const w = iw * s,
-        h = ih * s;
+    const w = iw * s;
+    const h = ih * s;
     return { x: (bw - w) / 2, y: (bh - h) / 2, w, h };
 };
 
@@ -43,40 +54,71 @@ export default function ShareDialog({
     const [overlayImg, setOverlayImg] = useState<HTMLImageElement | null>(null);
 
     useEffect(() => {
-        loadImage(frameSrc).then(setFrameImg);
+        let alive = true;
+        loadImage(frameSrc).then(img => alive && setFrameImg(img));
+        return () => {
+            alive = false;
+        };
     }, [frameSrc]);
+
     useEffect(() => {
-        loadImage(photo).then(setOverlayImg);
+        let alive = true;
+        loadImage(photo).then(img => alive && setOverlayImg(img));
+        return () => {
+            alive = false;
+        };
     }, [photo]);
 
     const FW = frameImg?.naturalWidth ?? SLOT_BASE.w;
     const FH = frameImg?.naturalHeight ?? SLOT_BASE.h;
 
-    const [scale, setScale] = useState(1);
+    // Tính kích thước hiển thị (không scale Stage bằng transform)
+    const [display, setDisplay] = useState({ w: FW, h: FH });
     useEffect(() => {
         const calc = () => {
             const vw =
                 (window.visualViewport?.width ?? window.innerWidth) * 0.9;
             const vh =
                 (window.visualViewport?.height ?? window.innerHeight) * 0.9;
-            setScale(Math.min(vw / FW, vh / FH));
+            const scale = Math.min(vw / FW, vh / FH, 1);
+            setDisplay({
+                w: Math.round(FW * scale),
+                h: Math.round(FH * scale),
+            });
         };
         calc();
         const onR = () => calc();
         window.addEventListener('resize', onR, { passive: true });
+        window.addEventListener('orientationchange', onR, { passive: true });
         window.visualViewport?.addEventListener('resize', onR, {
             passive: true,
         });
         return () => {
             window.removeEventListener('resize', onR);
+            window.removeEventListener('orientationchange', onR);
             window.visualViewport?.removeEventListener('resize', onR);
         };
     }, [FW, FH]);
 
-    const rx = FW / SLOT_BASE.w,
-        ry = FH / SLOT_BASE.h;
-    const slotW = SLOT_SHARE.w * rx,
-        slotH = SLOT_SHARE.h * ry;
+    // DPR an toàn (nét nhưng không bể canvas trên iOS)
+    const DPR = useMemo(() => {
+        const dev =
+            typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+        return isIOS() ? Math.min(2, dev) : Math.min(3, dev);
+    }, []);
+    useEffect(() => {
+        // ảnh hưởng export & hit-canvas; Konva tự nhân DPR nội bộ
+        Konva.pixelRatio = DPR;
+    }, [DPR]);
+
+    // Root group scale theo tỷ lệ hiển thị để giữ toạ độ base chuẩn
+    const rootScaleX = display.w / FW;
+    const rootScaleY = display.h / FH;
+
+    const rx = FW / SLOT_BASE.w;
+    const ry = FH / SLOT_BASE.h;
+    const slotW = SLOT_SHARE.w * rx;
+    const slotH = SLOT_SHARE.h * ry;
     const cx = SLOT_SHARE.x * rx + slotW / 2;
     const cy = SLOT_SHARE.y * ry + slotH / 2;
     const rot = SLOT_SHARE.rotation ?? 0;
@@ -86,9 +128,22 @@ export default function ShareDialog({
         : null;
 
     const stageRef = useRef<any>(null);
+    const setSmoothingAndRedraw = useCallback(() => {
+        const stage = stageRef.current as
+            | import('konva/lib/Stage').Stage
+            | undefined;
+        if (!stage) return;
+        stage.getLayers().forEach(l => {
+            // @ts-ignore
+            l.getContext()._context.imageSmoothingEnabled = true;
+            // @ts-ignore
+            l.getContext()._context.imageSmoothingQuality = 'high';
+        });
+        requestAnimationFrame(() => stage.batchDraw());
+    }, []);
     useEffect(() => {
-        stageRef.current?.batchDraw();
-    }, [FW, FH, scale, overlayImg, rx, ry]);
+        setSmoothingAndRedraw();
+    }, [setSmoothingAndRedraw, display.w, display.h, overlayImg, DPR]);
 
     const BLEED = 2;
     const bx = (fit ? fit.x : 0) - slotW / 2 - BLEED / 2;
@@ -99,30 +154,34 @@ export default function ShareDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                className='p-0 bg-transparent border-0 shadow-none w-auto max-w-none'
+                className='p-0 border-0 shadow-none w-auto max-w-none'
                 fitContent
                 centerByGrid
+                showCloseButton
             >
                 <div
-                    className='relative mx-auto'
-                    style={{ width: FW * scale, height: FH * scale }}
+                    className='relative mx-auto z-[5]'
+                    style={{
+                        width: display.w,
+                        height: display.h,
+                        isolation: 'isolate',
+                    }}
                 >
-                    <div
+                    <Stage
+                        ref={stageRef}
+                        width={display.w}
+                        height={display.h}
+                        listening={false}
+                        perfectDrawEnabled={false}
                         style={{
-                            width: FW,
-                            height: FH,
-                            transform: `scale(${scale})`,
-                            transformOrigin: 'top left',
+                            position: 'absolute',
+                            inset: 0,
+                            display: 'block',
+                            zIndex: 2,
                         }}
                     >
-                        <Stage
-                            ref={stageRef}
-                            width={FW}
-                            height={FH}
-                            listening={false}
-                            style={{ display: 'block' }}
-                        >
-                            <Layer listening={false} hitGraphEnabled={false}>
+                        <Layer listening={false} hitGraphEnabled={false}>
+                            <Group scaleX={rootScaleX} scaleY={rootScaleY}>
                                 {overlayImg && fit && (
                                     <Group
                                         x={cx}
@@ -144,9 +203,6 @@ export default function ShareDialog({
                                         />
                                     </Group>
                                 )}
-                            </Layer>
-
-                            <Layer listening={false} hitGraphEnabled={false}>
                                 {frameImg && (
                                     <KImage
                                         image={frameImg}
@@ -156,9 +212,9 @@ export default function ShareDialog({
                                         height={FH}
                                     />
                                 )}
-                            </Layer>
-                        </Stage>
-                    </div>
+                            </Group>
+                        </Layer>
+                    </Stage>
 
                     <div className='absolute inset-x-0 bottom-10 flex justify-center gap-3 z-[5] pointer-events-auto'>
                         <Button
@@ -173,15 +229,13 @@ export default function ShareDialog({
                         <Button
                             variant='cta'
                             size='xl'
-                            onClick={() => {
-                                const u = buildSharer(photo);
-                                const p = window.open(
-                                    '_blank',
-                                    'noopener,noreferrer'
-                                );
-                                if (p) p.location.href = u;
-                                else window.location.href = u;
-                            }}
+                            onClick={() =>
+                                shareImageOrDeepLink({
+                                    imageUrl: photo,
+                                    hashtags: ['MienKyUc', 'LongWang'],
+                                    text: 'Chia sẻ khoảnh khắc Miền Ký Ức',
+                                })
+                            }
                         >
                             Chia sẻ
                         </Button>

@@ -1,32 +1,30 @@
+// components/ui/dialog.tsx
 'use client';
 
+import { cn } from '@/libs/utils';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { XIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { cn } from '@/libs/utils';
-
-function Dialog({
-    ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+function Dialog(props: React.ComponentProps<typeof DialogPrimitive.Root>) {
     return <DialogPrimitive.Root data-slot='dialog' {...props} />;
 }
 
-function DialogTrigger({
-    ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+function DialogTrigger(
+    props: React.ComponentProps<typeof DialogPrimitive.Trigger>
+) {
     return <DialogPrimitive.Trigger data-slot='dialog-trigger' {...props} />;
 }
 
-function DialogPortal({
-    ...props
-}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+function DialogPortal(
+    props: React.ComponentProps<typeof DialogPrimitive.Portal>
+) {
     return <DialogPrimitive.Portal data-slot='dialog-portal' {...props} />;
 }
 
-function DialogClose({
-    ...props
-}: React.ComponentProps<typeof DialogPrimitive.Close>) {
+function DialogClose(
+    props: React.ComponentProps<typeof DialogPrimitive.Close>
+) {
     return <DialogPrimitive.Close data-slot='dialog-close' {...props} />;
 }
 
@@ -38,8 +36,8 @@ function DialogOverlay({
         <DialogPrimitive.Overlay
             data-slot='dialog-overlay'
             className={cn(
-                // default z-50
-                'data-[state=open]:animate-in data-[state=closed]:animate-out fixed inset-0 z-50 bg-black/50',
+                'fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out',
+                'backdrop-saturate-100 will-change-[opacity] touch-manipulation',
                 className
             )}
             {...props}
@@ -74,9 +72,11 @@ function DialogContent({
             <button
                 type='button'
                 aria-label='Close'
-                className='absolute right-4 top-4 inline-flex size-8 items-center justify-center
-                 rounded-full bg-black/30 text-white hover:bg-black/40 pointer-events-auto'
-                style={{ zIndex: (zIndex ?? 60) + 3 }}
+                className='absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/40 pointer-events-auto'
+                style={{
+                    zIndex: (zIndex ?? 60) + 3,
+                    WebkitTapHighlightColor: 'transparent',
+                }}
             >
                 <XIcon />
             </button>
@@ -85,7 +85,6 @@ function DialogContent({
 
     return (
         <DialogPortal>
-            {/* overlay luôn dưới content */}
             <DialogOverlay
                 className={cn('fixed inset-0 bg-black/50', overlayClassName)}
                 style={{ zIndex }}
@@ -93,12 +92,16 @@ function DialogContent({
 
             {centerByGrid ? (
                 <div
-                    className='fixed inset-0 grid place-items-center'
+                    className='fixed inset-0 grid place-items-center [isolation:isolate] will-change-transform'
                     style={{ zIndex: zIndex + 1 }}
                 >
                     <DialogPrimitive.Content
-                        className={cn(base, className, 'relative')} // relative để z-index con hoạt động
-                        style={{ zIndex: zIndex + 2 }}
+                        className={cn(base, className, 'relative')}
+                        style={{
+                            zIndex: zIndex + 2,
+                            WebkitTransform: 'translateZ(0)',
+                            transform: 'translateZ(0)',
+                        }}
                         {...props}
                     >
                         {children}
@@ -109,10 +112,14 @@ function DialogContent({
                 <DialogPrimitive.Content
                     className={cn(
                         base,
-                        'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 relative',
+                        'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
                         className
                     )}
-                    style={{ zIndex: zIndex + 2 }}
+                    style={{
+                        zIndex: zIndex + 2,
+                        WebkitTransform: 'translateZ(0)',
+                        transform: 'translateZ(0)',
+                    }}
                     {...props}
                 >
                     {children}

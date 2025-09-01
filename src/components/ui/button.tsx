@@ -34,12 +34,12 @@ const buttonVariants = cva(
                 lg: 'min-h-[48px] h-12 px-6 text-[clamp(14px,3.6vw,16px)]',
                 xl: [
                     // mobile mặc định nhỏ hơn
-                    'min-h-[40px] h-10 px-6 rounded-full',
-                    'text-[clamp(12px,4vw,14px)] sm:text-[clamp(14px,3vw,16px)] md:text-[clamp(12px,2vw,20px)]',
+                    'min-h-[36px] h-6 px-6 rounded-full',
+                    'text-[12px] sm:text-[16px] md:text-[20px]',
                     // tablet: còn nhỏ hơn nữa
-                    'sm:h-9 sm:px-6',
+                    'sm:h-8 sm:px-6',
                     // desktop: cao vừa phải
-                    'md:h-12 md:px-8',
+                    'md:h-10 md:px-8',
                 ].join(' '),
                 icon: 'size-9 rounded-md',
             },
