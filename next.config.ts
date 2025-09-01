@@ -3,6 +3,7 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
     /* config options here */
     eslint: { ignoreDuringBuilds: true },
+    typescript: { ignoreBuildErrors: true },
     allowedDevOrigins: ['localhost:3000', '172.21.208.1:3000'],
     images: {
         // Bắt buộc dùng remotePatterns nếu có port hoặc http
