@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError, isAxiosError } from 'axios';
 import { NextAuthOptions } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 
@@ -7,6 +7,7 @@ type LoginResponse = {
     data: { accessToken: string; refreshToken: string; userId: string };
 };
 
+const API = process.env.NEXT_PUBLIC_API_URL;
 const decodeJwt = (token: string) => {
     const json = Buffer.from(token.split('.')[1] ?? '', 'base64url').toString(
         'utf8'
@@ -17,7 +18,7 @@ const decodeJwt = (token: string) => {
 async function refreshAccessToken(token: any) {
     try {
         const { data } = await axios.post<LoginResponse>(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/Auth/refresh-token`,
+            `${API}/api/Auth/refresh-token`,
             { refreshToken: token.refreshToken }
         );
         const { accessToken, refreshToken } = data.data;
@@ -43,21 +44,63 @@ export const authOptions: NextAuthOptions = {
                 password: { label: 'Password', type: 'password' },
             },
             async authorize(creds) {
-                const { data: resp } = await axios.post<LoginResponse>(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/Auth/login`,
-                    creds
-                );
-                if (!resp.success) return null;
-                const { accessToken, refreshToken, userId } = resp.data;
-                const { exp, email } = decodeJwt(accessToken);
-                return {
-                    id: userId,
-                    email,
-                    accessToken,
-                    refreshToken,
-                    exp,
-                    role: 'user',
-                } as any;
+                const url = `${API}/api/Auth/login`;
+                try {
+                    const { data: resp } = await axios.post<LoginResponse>(
+                        url,
+                        creds,
+                        {
+                            timeout: 15000,
+                            validateStatus: () => true, // tự xử lý status
+                        }
+                    );
+
+                    // Log nhẹ nhàng khi backend trả lỗi domain (success=false)
+                    if (!resp?.success) {
+                        console.warn('[Auth] domain-error', { url, resp });
+                        return null;
+                    }
+
+                    const { accessToken, refreshToken, userId } = resp.data;
+                    const { exp, email } = decodeJwt(accessToken) as any;
+                    return {
+                        id: userId,
+                        email,
+                        accessToken,
+                        refreshToken,
+                        exp,
+                        role: 'user',
+                    } as any;
+                } catch (error) {
+                    if (isAxiosError(error)) {
+                        const err = error as AxiosError<any>;
+                        const info = {
+                            url,
+                            method: err.config?.method,
+                            status: err.response?.status ?? 'NO_STATUS',
+                            data: err.response?.data,
+                            code: err.code,
+                            message: err.message,
+                        };
+                        console.error('[Auth] axios-error', info);
+
+                        // Sai thông tin đăng nhập / không có quyền → trả null
+                        if (
+                            err.response &&
+                            [401, 403].includes(err.response.status)
+                        )
+                            return null;
+
+                        // Lỗi khác → ném ra để NextAuth chuyển hướng error page
+                        throw new Error(`LoginFailed:${info.status}`);
+                    }
+
+                    // Non-axios error
+                    console.error('[Auth] unknown-error', {
+                        message: (error as Error).message,
+                    });
+                    throw new Error('LoginFailed:UNKNOWN');
+                }
             },
         }),
     ],

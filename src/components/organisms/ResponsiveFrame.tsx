@@ -5,7 +5,6 @@ import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { X as XIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
-import { Spinner } from '../ui/spinner';
 import type { CanvasFrameHandle } from './CanvasFrame';
 import PhotoUploader from './PhotoUploader';
 
@@ -37,8 +36,6 @@ export default function ResponsiveFrame(props: {
     useEffect(() => {
         if (frameRef.current && onBind) onBind(frameRef.current);
     }, [onBind, base]);
-
-    if (!frameSrc) return <Spinner />;
 
     return (
         <div className='relative' style={{ width: base, height: base }}>

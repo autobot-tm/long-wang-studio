@@ -43,7 +43,7 @@ export default function LoginForm({
             router.push(res.url ?? callbackUrl);
             router.refresh();
         } else {
-            setError(res?.error ?? 'Đăng nhập thất bại, vui lòng thử lại.');
+            setError('Đăng nhập thất bại, vui lòng thử lại.');
         }
     };
 

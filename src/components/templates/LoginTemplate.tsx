@@ -1,6 +1,15 @@
 'use client';
 
-import WrapperLoginForm from '../organisms/WrapperLoginForm';
+import dynamic from 'next/dynamic';
+import SplashScreen from '../ui/splash-screen';
+
+const WrapperLoginForm = dynamic(
+    () => import('../organisms/WrapperLoginForm'),
+    {
+        ssr: false,
+        loading: () => <SplashScreen />,
+    }
+);
 
 export default function LoginTemplate() {
     return (

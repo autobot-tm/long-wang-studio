@@ -1,4 +1,3 @@
-// components/organisms/ShareDialog.tsx
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { shareImageOrDeepLink } from '@/utils/share';
 import Konva from 'konva';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Group, Image as KImage, Layer, Stage } from 'react-konva';
+import { Spinner } from '../ui/spinner';
 
 const SLOT_BASE = { w: 960, h: 1280 } as const;
 const isIOS = () =>
@@ -159,89 +159,93 @@ export default function ShareDialog({
                 centerByGrid
                 showCloseButton
             >
-                <div
-                    className='relative mx-auto z-[5]'
-                    style={{
-                        width: display.w,
-                        height: display.h,
-                        isolation: 'isolate',
-                    }}
-                >
-                    <Stage
-                        ref={stageRef}
-                        width={display.w}
-                        height={display.h}
-                        listening={false}
-                        perfectDrawEnabled={false}
+                {overlayImg && fit ? (
+                    <div
+                        className='relative mx-auto z-[5]'
                         style={{
-                            position: 'absolute',
-                            inset: 0,
-                            display: 'block',
-                            zIndex: 2,
+                            width: display.w,
+                            height: display.h,
+                            isolation: 'isolate',
                         }}
                     >
-                        <Layer listening={false} hitGraphEnabled={false}>
-                            <Group scaleX={rootScaleX} scaleY={rootScaleY}>
-                                {overlayImg && fit && (
-                                    <Group
-                                        x={cx}
-                                        y={cy}
-                                        rotation={rot}
-                                        offsetX={slotW / 2}
-                                        offsetY={slotH / 2}
-                                        clipX={-slotW / 2}
-                                        clipY={-slotH / 2}
-                                        clipWidth={slotW}
-                                        clipHeight={slotH}
-                                    >
+                        <Stage
+                            ref={stageRef}
+                            width={display.w}
+                            height={display.h}
+                            listening={false}
+                            perfectDrawEnabled={false}
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                display: 'block',
+                                zIndex: 2,
+                            }}
+                        >
+                            <Layer listening={false} hitGraphEnabled={false}>
+                                <Group scaleX={rootScaleX} scaleY={rootScaleY}>
+                                    {overlayImg && fit && (
+                                        <Group
+                                            x={cx}
+                                            y={cy}
+                                            rotation={rot}
+                                            offsetX={slotW / 2}
+                                            offsetY={slotH / 2}
+                                            clipX={-slotW / 2}
+                                            clipY={-slotH / 2}
+                                            clipWidth={slotW}
+                                            clipHeight={slotH}
+                                        >
+                                            <KImage
+                                                image={overlayImg}
+                                                x={bx}
+                                                y={by}
+                                                width={bw}
+                                                height={bh}
+                                            />
+                                        </Group>
+                                    )}
+                                    {frameImg && (
                                         <KImage
-                                            image={overlayImg}
-                                            x={bx}
-                                            y={by}
-                                            width={bw}
-                                            height={bh}
+                                            image={frameImg}
+                                            x={0}
+                                            y={0}
+                                            width={FW}
+                                            height={FH}
                                         />
-                                    </Group>
-                                )}
-                                {frameImg && (
-                                    <KImage
-                                        image={frameImg}
-                                        x={0}
-                                        y={0}
-                                        width={FW}
-                                        height={FH}
-                                    />
-                                )}
-                            </Group>
-                        </Layer>
-                    </Stage>
+                                    )}
+                                </Group>
+                            </Layer>
+                        </Stage>
 
-                    <div className='absolute inset-x-0 bottom-10 flex justify-center gap-3 z-[5] pointer-events-auto'>
-                        <Button
-                            variant='cta'
-                            size='xl'
-                            onClick={() =>
-                                downloadOrOpen(photo, 'mien-ky-uc.jpg')
-                            }
-                        >
-                            Tải xuống
-                        </Button>
-                        <Button
-                            variant='cta'
-                            size='xl'
-                            onClick={() =>
-                                shareImageOrDeepLink({
-                                    imageUrl: photo,
-                                    hashtags: ['MienKyUc', 'LongWang'],
-                                    text: 'Chia sẻ khoảnh khắc Miền Ký Ức',
-                                })
-                            }
-                        >
-                            Chia sẻ
-                        </Button>
+                        <div className='absolute inset-x-0 bottom-10 flex justify-center gap-3 z-[5] pointer-events-auto'>
+                            <Button
+                                variant='cta'
+                                size='xl'
+                                onClick={() =>
+                                    downloadOrOpen(photo, 'mien-ky-uc.jpg')
+                                }
+                            >
+                                Tải xuống
+                            </Button>
+                            <Button
+                                variant='cta'
+                                size='xl'
+                                onClick={() =>
+                                    shareImageOrDeepLink({
+                                        imageUrl: photo,
+                                        hashtags: ['MienKyUc', 'LongWang'],
+                                        text: 'Chia sẻ khoảnh khắc Miền Ký Ức',
+                                    })
+                                }
+                            >
+                                Chia sẻ
+                            </Button>
+                        </div>
+                        <div className='h-16' />
                     </div>
-                    <div className='h-16' />
-                </div>
+                ) : (
+                    <Spinner size={54} />
+                )}
             </DialogContent>
         </Dialog>
     );

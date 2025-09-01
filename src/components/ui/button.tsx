@@ -75,7 +75,7 @@ function Button({
     const Comp = asChild ? Slot : 'button';
     const content = textBg ? (
         <span
-            className='bg-clip-text text-transparent [-webkit-text-fill-color:transparent] leading-[1.15]'
+            className='bg-clip-text text-transparent [-webkit-text-fill-color:transparent] leading-[1.15] py-0.5'
             style={{
                 backgroundImage: textBg,
                 backgroundSize: 'cover',
