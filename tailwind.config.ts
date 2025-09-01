@@ -29,7 +29,10 @@ export default {
             keyframes: {
                 shimmer: { '100%': { transform: 'translateX(100%)' } },
             },
-            animation: { shimmer: 'shimmer 1.6s infinite' },
+            animation: {
+                shimmer: 'shimmer 1.6s infinite',
+                pulseSlow: 'pulse 1.6s ease-in-out infinite',
+            },
         },
     },
     plugins: [],
