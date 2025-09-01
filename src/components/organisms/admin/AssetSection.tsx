@@ -1,13 +1,8 @@
 'use client';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-    Asset,
-    MediaType,
-    listAssets,
-    setActiveAsset,
-    uploadAsset,
-} from '@/services/api/media.service';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useBackgroundAssets } from '@/hooks/useBackgroundAssets';
+import { useTaggedFrames } from '@/hooks/useTaggedFrames';
+import { Asset } from '@/services/api/media.service';
 import { Plus } from 'lucide-react';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
@@ -19,52 +14,44 @@ export default function AssetSection({
     onPickBg,
 }: {
     title: string;
-    type: MediaType;
-    onPickBg?: (url: string) => void;
+    type: 'background' | 'frame' | 'popup';
+    onPickBg?: (u: string) => void;
 }) {
-    const qc = useQueryClient();
-    const { data = [] } = useQuery({
-        queryKey: ['assets', type],
-        queryFn: () => listAssets(type),
-        enabled: type !== 'background', // ❗ Background không fetch list
-    });
-    const [selected, setSelected] = useState<string | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
+    const [selected, setSelected] = useState<string | null>(null);
 
-    const up = useMutation({
-        mutationFn: (files: FileList) => uploadAsset(type, files),
-        onSuccess: async (_, files) => {
-            if (type === 'background') {
-                const file = files[0];
-                if (file) {
-                    const url = URL.createObjectURL(file);
-                    onPickBg?.(url); // đổi background ngay lập tức
-                }
-            } else {
-                qc.invalidateQueries({ queryKey: ['assets', type] });
-            }
-        },
-    });
-    const activate = useMutation({
-        mutationFn: (id: string) => setActiveAsset(type, id),
-        onSuccess: (_, id) => {
-            qc.invalidateQueries({ queryKey: ['assets', type] });
-            const item = data.find(x => x.id === id);
-            if (type === 'background' && item) onPickBg?.(item.url);
-        },
-    });
-
-    const hint =
-        'Thêm hình ảnh của bạn vào đây và bạn có thể tải lên tối đa 5 file';
-
-    // Background → chỉ render banner + input
     if (type === 'background') {
+        const bg = useBackgroundAssets();
+        const [changing, setChanging] = useState(false);
+        const current = bg?.data?.data?.[0];
+        const currentUrl = current?.url ?? '/images/landing-background.png';
+
+        const onUpload = async (files: FileList) => {
+            const f = files?.[0];
+            if (!f || changing) return;
+            setChanging(true);
+
+            const preview = URL.createObjectURL(f);
+            onPickBg?.(preview); // optimistic UI
+
+            try {
+                const prevId = current?.id;
+                if (prevId) await bg.remove.mutateAsync(prevId); // 1) xoá ảnh cũ
+                await bg.uploadNew.mutateAsync(f); // 2) upload ảnh mới
+            } catch {
+                onPickBg?.(currentUrl);
+            } finally {
+                URL.revokeObjectURL(preview);
+                setChanging(false);
+            }
+        };
+
         return (
             <section>
                 <SectionHeader
                     title={title}
-                    hint={'Bạn thay đổi hình background tại đây'}
-                    onChangeClick={() => fileRef.current?.click()}
+                    hint='Bạn thay đổi hình background tại đây'
+                    onChangeClick={() => !changing && fileRef.current?.click()}
                 />
                 <input
                     ref={fileRef}
@@ -72,16 +59,14 @@ export default function AssetSection({
                     hidden
                     accept='image/*'
                     onChange={e =>
-                        e.currentTarget.files &&
-                        up.mutate(e.currentTarget.files)
+                        e.currentTarget.files && onUpload(e.currentTarget.files)
                     }
                 />
 
-                {/* Wrapper chỉ 1 border */}
                 <div className='relative w-full overflow-hidden rounded-[20px] border border-[#C9B08A] bg-white/50'>
                     <div className='relative w-full pt-[25%]'>
                         <Image
-                            src={'/images/landing-background.png'}
+                            src={currentUrl}
                             alt=''
                             fill
                             sizes='100vw'
@@ -93,19 +78,23 @@ export default function AssetSection({
         );
     }
 
-    // Frame / Popup → render grid
+    // Frames / Popup (dùng chung APIframes theo tags)
+    const tag = type === 'popup' ? 'popup' : 'frame';
+    const h = useTaggedFrames(tag);
+    const data = h.data ?? [];
+
     return (
         <section>
             <SectionHeader
                 title={title}
-                hint={hint}
-                onChangeClick={() => selected && activate.mutate(selected)}
+                hint='Thêm hình ảnh của bạn vào đây và bạn có thể tải lên tối đa 5 file'
+                onChangeClick={() => selected && h.remove.mutate(selected)}
             />
             <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4'>
                 {data.map((it: Asset) => (
                     <Card
                         key={it.id}
-                        className={`overflow-hidden rounded-[20px] border-[#C9B08A] transition hover:ring-2 hover:ring-[#AA8143]${
+                        className={`overflow-hidden rounded-[20px] border-[#C9B08A] transition hover:ring-2 hover:ring-[#AA8143] ${
                             selected === it.id ? 'ring-2 ring-[#AA8143]' : ''
                         }`}
                         onClick={() => setSelected(it.id)}
@@ -124,7 +113,7 @@ export default function AssetSection({
                     </Card>
                 ))}
 
-                {/* Placeholder “+” */}
+                {/* Upload */}
                 <div
                     onClick={() => fileRef.current?.click()}
                     className='flex aspect-square cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C9B08A] bg-white/50 text-[#AA8143] hover:bg-[#AA8143]/5'
@@ -136,9 +125,10 @@ export default function AssetSection({
                     type='file'
                     hidden
                     multiple
+                    accept='image/*'
                     onChange={e =>
                         e.currentTarget.files &&
-                        up.mutate(e.currentTarget.files)
+                        h.uploadMany.mutate(e.currentTarget.files)
                     }
                 />
             </div>

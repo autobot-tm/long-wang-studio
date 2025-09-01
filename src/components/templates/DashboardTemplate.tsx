@@ -1,30 +1,33 @@
 'use client';
 import BackgroundProvider from '@/components/organisms/BackgroundProvider';
-import { useImageReady } from '@/hooks/useImageReady';
+import { useBackgroundAssets } from '@/hooks/useBackgroundAssets';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Navbar from '../molecules/admin/Navbar';
 import AssetSection from '../organisms/admin/AssetSection';
 import SplashScreen from '../ui/splash-screen';
 
+const DEFAULT_BG = '/images/landing-background.png';
+
 export default function DashboardTemplate() {
-    const [bgUrl, setBgUrl] = useState<string>('');
-    const bg = bgUrl || '/images/landing-background.png';
-    const bgReady = useImageReady(bg);
+    const [localBg, setLocalBg] = useState<string | null>(null);
+    const bgQ = useBackgroundAssets();
+    const serverBg = bgQ?.data?.data?.[0]?.url ?? null;
+    const bg = useMemo(
+        () => localBg ?? serverBg ?? DEFAULT_BG,
+        [localBg, serverBg]
+    );
 
     return (
         <>
-            {!bgReady && <SplashScreen />}
+            {!bgQ.isSuccess && <SplashScreen />}
             <BackgroundProvider
-                as='main'
                 bg={`url('${bg}')`}
-                paint
                 fadeIn
-                ready={bgReady}
-                className='min-h-screen'
+                ready={bgQ.isSuccess}
             >
                 <Navbar />
-                <div className='mx-auto max-w-[1284px] space-y-6 px-2 mt-[60px] pb-[60px]'>
+                <div className='mx-auto max-w-[1284px] space-y-6 px-7 mt-[60px] pb-[60px]'>
                     <div className='flex items-center justify-center w-full mx-auto'>
                         <Image
                             src='/images/khoanh.png'
@@ -38,7 +41,7 @@ export default function DashboardTemplate() {
                         <AssetSection
                             title='Background'
                             type='background'
-                            onPickBg={setBgUrl}
+                            onPickBg={setLocalBg}
                         />
                         <AssetSection
                             title='Khung hình hiển thị'

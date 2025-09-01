@@ -10,7 +10,7 @@ export default function LogoutButton() {
         <Button
             onClick={handleLogout}
             variant='ghost'
-            className='px-5 rounded-full border border-[#AA8413] text-[#AA8413] bg-[#FAF2E0] hover:bg-[#AA8413]/10'
+            className='cursor-pointer px-5 rounded-full border border-[#AA8413] text-[#AA8413] bg-[#FAF2E0] hover:bg-[#AA8413]/10'
         >
             Đăng xuất
         </Button>
