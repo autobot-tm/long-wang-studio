@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useBackgroundAssets } from '@/hooks/useBackgroundAssets';
 import { useTaggedFrames } from '@/hooks/useTaggedFrames';
 import { Asset } from '@/services/api/media.service';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 import SectionHeader from '../../molecules/admin/SectionHeader';
@@ -87,6 +87,12 @@ export default function AssetSection({
     const h = useTaggedFrames(tag);
     const data = h.data ?? [];
 
+    const handleDelete = async (id: string) => {
+        if (!confirm('Bạn có chắc muốn xoá hình này?')) return;
+        await h.remove.mutateAsync(id);
+        if (selected === id) setSelected(null);
+    };
+
     return (
         <section>
             <SectionHeader
@@ -98,11 +104,27 @@ export default function AssetSection({
                 {data.map((it: Asset) => (
                     <Card
                         key={it.id}
-                        className={`overflow-hidden rounded-[20px] border-[#C9B08A] transition hover:ring-2 hover:ring-[#AA8143] ${
+                        className={`group relative overflow-hidden rounded-[20px] border-[#C9B08A] transition hover:ring-2 hover:ring-[#AA8143] ${
                             selected === it.id ? 'ring-2 ring-[#AA8143]' : ''
                         }`}
                         onClick={() => setSelected(it.id)}
                     >
+                        {/* nút X xoá */}
+                        <button
+                            type='button'
+                            aria-label='Xoá'
+                            disabled={h.remove.isPending}
+                            onClick={e => {
+                                e.stopPropagation();
+                                handleDelete(it.id);
+                            }}
+                            className='absolute right-2 top-2 z-10 rounded-full bg-white/90 p-1 shadow
+                         transition hover:bg-white focus:outline-none
+                         opacity-0 group-hover:opacity-100 cursor-pointer'
+                        >
+                            <X size={16} />
+                        </button>
+
                         <CardContent className='p-0'>
                             <div className='relative w-full pt-[100%]'>
                                 <Image
@@ -116,12 +138,14 @@ export default function AssetSection({
                         </CardContent>
                     </Card>
                 ))}
+
                 <div
                     onClick={() => fileRef.current?.click()}
-                    className='flex aspect-square cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C9B08A] bg-white/50 text-[#AA8143] hover:bg-[#AA8143]/5'
+                    className='flex aspect-square cursor-pointer items-center justify-center rounded-[20px] border border-[#C9B08A] bg-white/50 text-[#AA8143] hover:bg-[#AA8143]/5'
                 >
                     <Plus size={32} />
                 </div>
+
                 <input
                     ref={fileRef}
                     type='file'
