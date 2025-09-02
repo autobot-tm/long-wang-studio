@@ -23,29 +23,34 @@ export default function AssetSection({
     if (type === 'background') {
         const bg = useBackgroundAssets();
         const [changing, setChanging] = useState(false);
-        const current = bg?.data?.data?.[0];
+        const arr = (bg as any)?.data?.data ?? (bg as any)?.data ?? [];
+        const current: Asset | undefined = arr[0];
         const currentUrl = current?.url ?? '/images/landing-background.png';
-
         const onUpload = async (files: FileList) => {
             const f = files?.[0];
             if (!f || changing) return;
             setChanging(true);
-
             const preview = URL.createObjectURL(f);
             onPickBg?.(preview); // optimistic UI
-
             try {
                 const prevId = current?.id;
-                if (prevId) await bg.remove.mutateAsync(prevId); // 1) xoá ảnh cũ
-                await bg.uploadNew.mutateAsync(f); // 2) upload ảnh mới
+                if (prevId) await bg.remove.mutateAsync(prevId);
+                const uploaded: Asset | void = await bg.uploadNew.mutateAsync(
+                    f
+                );
+                // nếu API trả url mới, thay ngay để rồi mới revoke preview
+                if ((uploaded as any)?.url) onPickBg?.((uploaded as any).url);
             } catch {
                 onPickBg?.(currentUrl);
             } finally {
-                URL.revokeObjectURL(preview);
+                // trì hoãn revoke để tránh ERR FILE NOT FOUND khi <Image> còn render blob:
+                setTimeout(() => URL.revokeObjectURL(preview), 1500);
                 setChanging(false);
             }
         };
 
+        const isTemp =
+            currentUrl.startsWith('blob:') || currentUrl.startsWith('data:');
         return (
             <section>
                 <SectionHeader
@@ -62,7 +67,6 @@ export default function AssetSection({
                         e.currentTarget.files && onUpload(e.currentTarget.files)
                     }
                 />
-
                 <div className='relative w-full overflow-hidden rounded-[20px] border border-[#C9B08A] bg-white/50'>
                     <div className='relative w-full pt-[25%]'>
                         <Image
@@ -71,6 +75,7 @@ export default function AssetSection({
                             fill
                             sizes='100vw'
                             className='object-cover object-center'
+                            unoptimized={isTemp} // cho blob:/data:
                         />
                     </div>
                 </div>
@@ -78,7 +83,6 @@ export default function AssetSection({
         );
     }
 
-    // Frames / Popup (dùng chung APIframes theo tags)
     const tag = type === 'popup' ? 'popup' : 'frame';
     const h = useTaggedFrames(tag);
     const data = h.data ?? [];
@@ -112,8 +116,6 @@ export default function AssetSection({
                         </CardContent>
                     </Card>
                 ))}
-
-                {/* Upload */}
                 <div
                     onClick={() => fileRef.current?.click()}
                     className='flex aspect-square cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C9B08A] bg-white/50 text-[#AA8143] hover:bg-[#AA8143]/5'

@@ -1,3 +1,4 @@
+import { ENV } from '@/config/env';
 import axios, { AxiosError, isAxiosError } from 'axios';
 import { NextAuthOptions } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
@@ -7,7 +8,7 @@ type LoginResponse = {
     data: { accessToken: string; refreshToken: string; userId: string };
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+const API = `${ENV.SERVER_API}/api`;
 const decodeJwt = (token: string) => {
     const json = Buffer.from(token.split('.')[1] ?? '', 'base64url').toString(
         'utf8'
@@ -18,7 +19,7 @@ const decodeJwt = (token: string) => {
 async function refreshAccessToken(token: any) {
     try {
         const { data } = await axios.post<LoginResponse>(
-            `${API}/api/Auth/refresh-token`,
+            `${API}/Auth/refresh-token`,
             { refreshToken: token.refreshToken }
         );
         const { accessToken, refreshToken } = data.data;
@@ -44,7 +45,7 @@ export const authOptions: NextAuthOptions = {
                 password: { label: 'Password', type: 'password' },
             },
             async authorize(creds) {
-                const url = `${API}/api/Auth/login`;
+                const url = `${API}/Auth/login`;
                 try {
                     const { data: resp } = await axios.post<LoginResponse>(
                         url,

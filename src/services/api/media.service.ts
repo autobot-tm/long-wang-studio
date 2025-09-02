@@ -1,9 +1,7 @@
 'use client';
-
 import axiosClient from '@/libs/axios/instance.client';
 
 export type MediaType = 'background' | 'frame' | 'popup';
-
 export type Asset = {
     id: string;
     url: string;
@@ -14,49 +12,36 @@ export type Asset = {
 
 // ===== Backgrounds =====
 export async function listBackgrounds(): Promise<Asset[]> {
-    const { data } = await axiosClient.get<Asset[]>('/api/backgrounds', {
-        params: {},
-    });
+    const { data } = await axiosClient.get<Asset[]>('/backgrounds');
+
     return data;
 }
-
 export async function uploadBackground(file: File): Promise<Asset> {
     const fd = new FormData();
     fd.append('file', file);
     fd.append('name', 'background');
     fd.append('isPublic', 'true');
-
-    const { data } = await axiosClient.post<Asset>(
-        '/api/backgrounds/upload',
-        fd,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
-    );
+    const { data } = await axiosClient.post<Asset>('/backgrounds/upload', fd);
     return data;
 }
-
-export async function deleteBackground(id: string): Promise<void> {
-    await axiosClient.delete(`/api/backgrounds/${id}`);
+export async function deleteBackground(id: string) {
+    await axiosClient.delete(`/backgrounds/${id}`);
 }
 
-// ===== Frames (dùng chung cho frame/popup) =====
-export async function listAllFrames(): Promise<Asset[]> {
-    const { data } = await axiosClient.get<Asset[]>('/api/frames/frames');
-    return data;
-}
-
+// ===== Frames / Popup =====
 export async function listFramesByTag(
     tag: 'frame' | 'popup'
 ): Promise<Asset[]> {
-    const all = await listAllFrames();
-    const t = tag.toLowerCase();
-    return all.filter(x => (x.tags ?? '').toLowerCase().includes(t));
+    const { data } = await axiosClient.get<Asset[]>('/frames/frames', {
+        params: { tags: tag },
+    });
+    return data;
 }
-
 export async function uploadFramesWithTag(
     files: FileList,
     tag: 'frame' | 'popup',
     ratio?: string
-): Promise<Asset[]> {
+) {
     const tasks = Array.from(files).map(async f => {
         const fd = new FormData();
         fd.append('file', f);
@@ -64,19 +49,11 @@ export async function uploadFramesWithTag(
         fd.append('tags', tag);
         fd.append('isPublic', 'true');
         if (ratio) fd.append('ratio', ratio);
-
-        const { data } = await axiosClient.post<Asset>(
-            '/api/frames/upload',
-            fd,
-            {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            }
-        );
+        const { data } = await axiosClient.post<Asset>('/frames/upload', fd);
         return data;
     });
     return Promise.all(tasks);
 }
-
-export async function deleteFrame(id: string): Promise<void> {
-    await axiosClient.delete(`/api/frames/${id}`);
+export async function deleteFrame(id: string) {
+    await axiosClient.delete(`/frames/${id}`);
 }

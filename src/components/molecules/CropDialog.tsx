@@ -1,6 +1,4 @@
-// components/molecules/CropDialog.tsx
 'use client';
-
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -9,11 +7,10 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Cropper from 'react-easy-crop';
 
 type CropArea = { width: number; height: number; x: number; y: number };
-
 const useIsMobile = () => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
     const isTouch =
@@ -37,20 +34,16 @@ export default function CropDialog({
 }) {
     const isMobile = useIsMobile();
     const allowRotate = !isMobile;
-
     const [zoom, setZoom] = useState(1);
     const [rot, setRot] = useState(0);
     const [area, setArea] = useState<CropArea | null>(null);
-    const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [submitting, setSubmitting] = useState(false);
 
-    const objectUrlRef = useRef<string | null>(null);
-    const imgUrl = useMemo(() => {
-        if (!file) return '';
-        const url = URL.createObjectURL(file);
-        objectUrlRef.current = url;
-        return url;
-    }, [file]);
+    const imgUrl = useMemo(
+        () => (file ? URL.createObjectURL(file) : ''),
+        [file]
+    );
 
     useEffect(() => {
         setZoom(1);
@@ -60,26 +53,22 @@ export default function CropDialog({
         setSubmitting(false);
     }, [imgUrl]);
 
-    useEffect(
-        () => () => {
-            if (objectUrlRef.current) {
-                URL.revokeObjectURL(objectUrlRef.current);
-                objectUrlRef.current = null;
-            }
-        },
-        [imgUrl]
-    );
+    useEffect(() => {
+        return () => {
+            if (imgUrl?.startsWith('blob:')) URL.revokeObjectURL(imgUrl);
+        };
+    }, [imgUrl]);
 
     async function handleDone() {
         if (submitting || !file || !area) return;
         setSubmitting(true);
 
-        const img = await new Promise<HTMLImageElement>(resolve => {
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
             const i = new Image();
-            i.crossOrigin = 'anonymous';
             i.decoding = 'async';
             i.src = imgUrl;
             i.onload = () => resolve(i);
+            i.onerror = reject;
         });
 
         const { width, height, x, y } = area;
@@ -87,19 +76,16 @@ export default function CropDialog({
         const ctx = c.getContext('2d')!;
         c.width = Math.round(width);
         c.height = Math.round(height);
-
         const rotation = allowRotate ? rot : 0;
         if (rotation) {
             ctx.translate(c.width / 2, c.height / 2);
             ctx.rotate((rotation * Math.PI) / 180);
             ctx.translate(-c.width / 2, -c.height / 2);
         }
-
-        ctx.imageSmoothingEnabled = true;
         // @ts-ignore
+        ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, x, y, width, height, 0, 0, c.width, c.height);
-
         onDone(c.toDataURL('image/jpeg', 0.92));
         setSubmitting(false);
     }
@@ -108,14 +94,18 @@ export default function CropDialog({
         <Dialog open={open} onOpenChange={v => !v && onClose()}>
             <DialogContent
                 className='w-[340px] sm:w-[400px] md:w-[540px]'
+                aria-labelledby='crop-title'
+                aria-describedby='crop-desc'
                 zIndex={380}
                 centerByGrid
             >
+                <p id='crop-desc' className='sr-only'>
+                    Chỉnh, phóng to/thu nhỏ ảnh trước khi dùng.
+                </p>
                 <div className='flex flex-col gap-3 max-h-[85dvh] sm:max-h-[80vh]'>
                     <DialogHeader>
-                        <DialogTitle>Chỉnh ảnh</DialogTitle>
+                        <DialogTitle id='crop-title'>Chỉnh ảnh</DialogTitle>
                     </DialogHeader>
-
                     <div className='relative flex-1 min-h-[320px] rounded-xs overflow-hidden bg-[#F6F2D7]'>
                         <Cropper
                             image={imgUrl}
@@ -132,7 +122,6 @@ export default function CropDialog({
                             onCropComplete={(_, px) => setArea(px as CropArea)}
                         />
                     </div>
-
                     <div className='space-y-2'>
                         <div className='text-sm'>Zoom</div>
                         <Slider
@@ -143,18 +132,16 @@ export default function CropDialog({
                             onValueChange={v => setZoom(v[0])}
                         />
                     </div>
-
                     <div
                         className='sticky bottom-0 left-0 right-0 z-10 bg-background/95 backdrop-blur 
                        border-t pt-3 pb-[max(10px,env(safe-area-inset-bottom))]'
                     >
-                        <div className='flex flex-row justify-end gap-3'>
+                        <div className='flex justify-end gap-3'>
                             <Button
                                 variant='outline'
                                 size='sm'
                                 fullMobile
                                 onClick={onClose}
-                                className='hover:opacity-80 transition'
                             >
                                 Hủy
                             </Button>
@@ -164,7 +151,6 @@ export default function CropDialog({
                                 fullMobile
                                 disabled={submitting || !area}
                                 onClick={handleDone}
-                                className='hover:opacity-90 transition'
                             >
                                 {submitting ? 'Đang xử lý...' : 'Dùng ảnh này'}
                             </Button>

@@ -52,9 +52,10 @@ const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
 
         useEffect(() => {
             const i = new Image();
-            i.crossOrigin = 'anonymous';
+            if (/^https?:/i.test(frameSrc)) i.crossOrigin = 'anonymous';
             i.src = frameSrc;
             i.onload = () => setFrameImg(i);
+            i.onerror = () => setFrameImg(null);
         }, [frameSrc]);
 
         useEffect(() => {
@@ -64,9 +65,11 @@ const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
                         new Promise<HTMLImageElement | null>(res => {
                             if (!src) return res(null);
                             const i = new Image();
-                            i.crossOrigin = 'anonymous';
+                            if (/^https?:/i.test(src))
+                                i.crossOrigin = 'anonymous';
                             i.src = src;
                             i.onload = () => res(i);
+                            i.onerror = () => res(null);
                         })
                 )
             ).then(setImgs);

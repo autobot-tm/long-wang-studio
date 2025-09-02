@@ -17,7 +17,7 @@ export async function uploadImage(
 
     try {
         const res = await axiosClient.post<ApiResponse<UploadResult>>(
-            '/api/images/upload',
+            '/images/upload',
             form,
             {
                 headers: { 'Content-Type': 'multipart/form-data' },
