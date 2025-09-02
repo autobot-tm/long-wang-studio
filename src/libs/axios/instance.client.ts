@@ -1,40 +1,58 @@
 'use client';
-import axios from 'axios';
-import { getSession, signIn } from 'next-auth/react';
 
-// ✅ Không bao giờ rỗng, luôn bắt đầu bằng '/'
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { signIn } from 'next-auth/react';
+import { tokenStore } from '../token-store';
+
 const RAW = process.env.NEXT_PUBLIC_API_BASE || '/_api';
 const API_BASE = RAW.startsWith('/') ? RAW : `/${RAW}`;
 
-let cachedToken: string | null = null;
-let lastFetch = 0;
+type Cfg = InternalAxiosRequestConfig & { _retry?: boolean };
 
-export const axiosClient = axios.create({ baseURL: API_BASE, timeout: 15000 });
+export const axiosClient = axios.create({
+    baseURL: API_BASE,
+    timeout: 15000,
+});
 
-axiosClient.interceptors.request.use(async config => {
-    const now = Date.now();
-    if (!cachedToken || now - lastFetch > 5000) {
-        const session = await getSession();
-        cachedToken = (session as any)?.accessToken ?? null;
-        lastFetch = now;
-    }
-    if (cachedToken) {
-        config.headers = {
-            ...(config.headers ?? {}),
-            Authorization: `Bearer ${cachedToken}`,
+axiosClient.interceptors.request.use((cfg: Cfg) => {
+    const token = tokenStore.get();
+
+    if (token) {
+        cfg.headers = {
+            ...(cfg.headers ?? {}),
+            Authorization: `Bearer ${token}`,
         };
     }
-    return config;
+    return cfg;
 });
+
+// 🛡️ Dedupe signIn khi 401
+let signingIn: Promise<void> | null = null;
+const ensureSignIn = () => {
+    if (!signingIn) {
+        signingIn = signIn(undefined, {
+            callbackUrl: window.location.href,
+        }).finally(() => (signingIn = null));
+    }
+    return signingIn;
+};
 
 axiosClient.interceptors.response.use(
     r => r,
-    async err => {
-        if (err?.response?.status === 401) {
-            cachedToken = null;
-            await signIn();
+    async (error: AxiosError) => {
+        const status = error.response?.status;
+        const cfg = (error.config || {}) as Cfg;
+
+        const isFromApi =
+            typeof cfg.baseURL === 'string' && (cfg.url ?? '').startsWith('/');
+
+        if (status === 401 && isFromApi && !cfg._retry) {
+            cfg._retry = true;
+            tokenStore.set(null);
+            await ensureSignIn();
         }
-        return Promise.reject(err);
+
+        return Promise.reject(error);
     }
 );
 

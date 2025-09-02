@@ -38,6 +38,7 @@ async function refreshAccessToken(token: any) {
 
 export const authOptions: NextAuthOptions = {
     session: { strategy: 'jwt' },
+    debug: process.env.NODE_ENV === 'development',
     providers: [
         Credentials({
             credentials: {
@@ -107,25 +108,42 @@ export const authOptions: NextAuthOptions = {
     ],
     callbacks: {
         async jwt({ token, user }) {
+            // Lúc login: map đầy đủ và clear error
             if (user) {
                 token.userId = (user as any).id;
                 token.accessToken = (user as any).accessToken;
                 token.refreshToken = (user as any).refreshToken;
-                token.accessTokenExpires = ((user as any).exp as number) * 1000;
-                token.role = (user as any).role ?? 'user';
+                token.accessTokenExpires = Number((user as any).exp) * 1000; // ms
+                token.error = undefined;
                 return token;
             }
-            if (Date.now() < (token.accessTokenExpires as number) - 60_000)
-                return token;
-            return refreshAccessToken(token);
+
+            const exp = Number(token.accessTokenExpires ?? 0);
+            // Nếu chưa có exp hợp lệ → giữ nguyên, đừng refresh bừa
+            if (!exp || Number.isNaN(exp)) return token;
+
+            // Chỉ refresh khi SẮP hết hạn (còn < 60s)
+            const now = Date.now();
+            if (now < exp - 60_000) return token;
+
+            // Không có refreshToken thì không refresh
+            if (!token.refreshToken) return token;
+
+            const next = await refreshAccessToken(token);
+            // Ghi log server để kiểm tra nhánh đang chạy
+            if ((next as any).error) {
+                console.warn('[JWT] refresh failed -> keep old token', {
+                    now,
+                    exp,
+                    diff: exp - now,
+                });
+                // KHÔNG xoá accessToken hiện tại, chỉ gắn error để UI biết
+                return { ...token, error: 'RefreshAccessTokenError' };
+            }
+            return next;
         },
         async session({ session, token }) {
-            session.user = {
-                ...(session.user ?? {}),
-                id: token.userId as string,
-            };
-            (session as any).accessToken = token.accessToken as string;
-            (session as any).role = (token.role as string) ?? 'user';
+            (session as any).accessToken = token.accessToken;
             (session as any).error = token.error;
             return session;
         },
