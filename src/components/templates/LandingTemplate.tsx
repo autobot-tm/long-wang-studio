@@ -104,14 +104,16 @@ export default function LandingTemplate() {
             >
                 <div className='max-w-6xl w-full px-7 py-12 flex flex-col items-center'>
                     <Logo />
-                    <Image
-                        src='/images/header.png'
-                        alt='header-landing'
-                        width={600}
-                        height={600}
-                        className='object-cover'
-                        priority
-                    />
+                    <div className='relative w-full max-w-[500px] aspect-[3/1]'>
+                        <Image
+                            src='/images/header.png'
+                            alt='header-landing'
+                            fill
+                            sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+                            className='object-contain'
+                            priority
+                        />
+                    </div>
                     <p className='text-[20px] md:text-[36px] text-[#AA8143] mt-4 font-gilroy max-w-[70%] md:max-w-[40%] text-center leading-[1.15]'>
                         Ngày tái ngộ đáng nhớ từ hoài niệm thân thương
                     </p>

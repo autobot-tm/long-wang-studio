@@ -4,10 +4,12 @@ const envBase = process.env.NEXT_PUBLIC_BASE_URL;
 const BASE =
     typeof window !== 'undefined' && !envBase
         ? window.location.origin
-        : envBase || 'https://your-domain.com';
+        : envBase || '';
 
-const isMobile = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 const isAndroid = () => /Android/i.test(navigator.userAgent);
+const isChrome = () =>
+    /Chrome\/\d+/i.test(navigator.userAgent) &&
+    !/Edge|OPR/i.test(navigator.userAgent);
 
 const normalizeHttps = (u: string) => {
     try {
@@ -18,10 +20,8 @@ const normalizeHttps = (u: string) => {
         return u;
     }
 };
-
 const buildPermalink = (imageUrl: string) =>
     `${BASE}/share?img=${encodeURIComponent(imageUrl)}`;
-
 const buildSharer = (permalink: string, text?: string, hashtags?: string[]) => {
     const tags = (hashtags ?? []).map(
         t => '#' + t.replace(/^#/, '').replace(/\s+/g, '')
@@ -42,34 +42,38 @@ export async function shareToFacebook(opts: {
     hashtags?: string[];
 }) {
     if (!opts.imageUrl) throw new Error('imageUrl is required');
+
     const img = normalizeHttps(opts.imageUrl);
     const permalink = buildPermalink(img);
     const sharer = buildSharer(permalink, opts.text, opts.hashtags);
 
-    if (isMobile() && 'share' in navigator) {
+    // 1) Native share sheet (nếu có)
+    if ('share' in navigator) {
         try {
             await (navigator as any).share({ url: permalink, text: opts.text });
             return true;
         } catch {}
     }
-    if (isMobile() && isAndroid()) {
-        const deep = `fb://facewebmodal/f?href=${encodeURIComponent(
+
+    // 2) Android Chrome: dùng INTENT URL (không spam lỗi fb://)
+    if (isAndroid() && isChrome()) {
+        const intent = `intent://facewebmodal/f?href=${encodeURIComponent(
             permalink
-        )}`;
-        window.location.href = deep;
-        setTimeout(() => {
-            window.location.href = sharer;
-        }, 800);
+        )}#Intent;scheme=fb;package=com.facebook.katana;S.browser_fallback_url=${encodeURIComponent(
+            sharer
+        )};end`;
+        window.location.href = intent;
         return true;
     }
-    if (isMobile()) {
-        window.location.href = sharer;
-    } else {
+
+    // 3) Fallback: web sharer
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) window.location.href = sharer;
+    else
         window.open(
             sharer,
             'fbshare',
             'noopener,noreferrer,width=720,height=640'
         );
-    }
     return true;
 }

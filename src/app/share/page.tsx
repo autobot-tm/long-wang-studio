@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 
-const BASE = process.env.NEXT_PUBLIC_BASE_URL || 'https://your-domain.com';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const BASE =
+    process.env.NEXT_PUBLIC_BASE_URL || 'https://long-wang-studio.vercel.app';
 
 const normalize = (u?: string) => {
     if (!u) return '';
@@ -47,12 +51,13 @@ export async function generateMetadata({
 
 export default function Page({ searchParams }: PageProps) {
     const img = normalize(searchParams?.img ?? '');
-    if (!img) return <p>Không có ảnh để hiển thị.</p>;
-    return (
+    return img ? (
         <img
             src={img}
             alt='Shared'
             style={{ maxWidth: 800, width: '100%', borderRadius: 8 }}
         />
+    ) : (
+        <p>Không có ảnh để hiển thị.</p>
     );
 }
