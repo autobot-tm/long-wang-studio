@@ -128,7 +128,7 @@ export default function LandingTemplate() {
                             </div>
                         ) : (
                             <Image
-                                src='/images/landing-page-frame-preview.png'
+                                src='/images/frame-preview.png'
                                 alt='Demo'
                                 width={700}
                                 height={700}
