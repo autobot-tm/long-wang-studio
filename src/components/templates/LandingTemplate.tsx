@@ -146,7 +146,7 @@ export default function LandingTemplate() {
                                     size='xl'
                                     disabled={!photo1 || !photo2 || isPreparing}
                                     onClick={handleOpenShare}
-                                    className='flex items-center gap-2 [touch-action:manipulation]'
+                                    className='flex items-center gap-2 [touch-action:manipulation] text-[#fff]'
                                 >
                                     {isPreparing ? 'Đang chuẩn bị…' : 'Chia sẻ'}
                                     {!isPreparing && (
@@ -166,6 +166,7 @@ export default function LandingTemplate() {
                             <Button
                                 variant='cta'
                                 size='xl'
+                                className='text-[#fff]'
                                 onClick={() => setIsAction(true)}
                             >
                                 BẮT ĐẦU TẠO

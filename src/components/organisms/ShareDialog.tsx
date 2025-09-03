@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { SLOT_SHARE } from '@/constants/slot';
 import { downloadOrOpen } from '@/utils/device';
-import { shareImageOrDeepLink } from '@/utils/share';
+import { shareToFacebook } from '@/utils/share';
 import Konva from 'konva';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Group, Image as KImage, Layer, Stage } from 'react-konva';
@@ -221,6 +221,7 @@ export default function ShareDialog({
                             <Button
                                 variant='cta'
                                 size='xl'
+                                className='text-[#fff]'
                                 onClick={() =>
                                     downloadOrOpen(photo, 'mien-ky-uc.jpg')
                                 }
@@ -230,8 +231,9 @@ export default function ShareDialog({
                             <Button
                                 variant='cta'
                                 size='xl'
+                                className='text-[#fff]'
                                 onClick={() =>
-                                    shareImageOrDeepLink({
+                                    shareToFacebook({
                                         imageUrl: photo,
                                         hashtags: ['MienKyUc', 'LongWang'],
                                         text: 'Chia sẻ khoảnh khắc Miền Ký Ức',

@@ -141,6 +141,7 @@ export default function CropDialog({
                                 variant='outline'
                                 size='sm'
                                 fullMobile
+                                className='text-[#000]'
                                 onClick={onClose}
                             >
                                 Hủy
@@ -149,6 +150,7 @@ export default function CropDialog({
                                 variant='cta'
                                 size='sm'
                                 fullMobile
+                                className='text-[#fff]'
                                 disabled={submitting || !area}
                                 onClick={handleDone}
                             >

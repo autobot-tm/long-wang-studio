@@ -18,7 +18,7 @@ const buttonVariants = cva(
             variant: {
                 default:
                     'bg-accent text-primary-foreground shadow-xs hover:bg-primary/90',
-                cta: 'bg-[#B6843A] text-white hover:opacity-90',
+                cta: 'bg-[#B6843A] hover:opacity-90',
                 destructive:
                     'bg-destructive text-white shadow-xs hover:bg-destructive/90',
                 outline:
@@ -72,7 +72,7 @@ function Button({
 }: ButtonProps) {
     const Comp = asChild ? Slot : 'button';
     const content = (
-        <span className='flex items-center gap-1 text-[white] leading-[1.15] py-0.5'>
+        <span className='flex items-center gap-1 leading-[1.15] py-0.5'>
             {children}
         </span>
     );
