@@ -2,12 +2,11 @@
 
 import { useBackgroundAssets } from '@/hooks/useBackgroundAssets';
 import { useImageReady } from '@/hooks/useImageReady';
-import { ArrowBigRight } from 'lucide-react';
+import { ArrowBigRightIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Logo from '../atoms/Logo';
-import MaskedIcon from '../atoms/MaskedIcon';
 import BackgroundProvider from '../organisms/BackgroundProvider';
 import { ensureUploadedUrl } from '../organisms/ShareDownloadOnce';
 import { Button } from '../ui/button';
@@ -139,33 +138,24 @@ export default function LandingTemplate() {
                         )}
                     </div>
 
-                    <div className='flex gap-6 mt-10'>
+                    <div className='mt-10'>
                         {isAction ? (
                             <>
-                                <div className='flex gap-6 relative z-20'>
-                                    <Button
-                                        variant='cta'
-                                        size='xl'
-                                        textBg='var(--page-bg)'
-                                        disabled={
-                                            !photo1 || !photo2 || isPreparing
-                                        }
-                                        onClick={handleOpenShare}
-                                        className='flex items-center gap-2 [touch-action:manipulation]'
-                                    >
-                                        {isPreparing
-                                            ? 'Đang chuẩn bị…'
-                                            : 'Chia sẻ'}
-                                        {!isPreparing && (
-                                            <MaskedIcon
-                                                Icon={ArrowBigRight}
-                                                sizeCSS='1em'
-                                                className='ml-2'
-                                            />
-                                        )}
-                                    </Button>
-                                </div>
-
+                                <Button
+                                    variant='cta'
+                                    size='xl'
+                                    disabled={!photo1 || !photo2 || isPreparing}
+                                    onClick={handleOpenShare}
+                                    className='flex items-center gap-2 [touch-action:manipulation]'
+                                >
+                                    {isPreparing ? 'Đang chuẩn bị…' : 'Chia sẻ'}
+                                    {!isPreparing && (
+                                        <ArrowBigRightIcon
+                                            className='w-2 h-2 md:w-4 md:h-4'
+                                            fill='#fff'
+                                        />
+                                    )}
+                                </Button>
                                 <ShareDialog
                                     photo={sharePhoto || ''}
                                     open={openShare}
@@ -176,7 +166,6 @@ export default function LandingTemplate() {
                             <Button
                                 variant='cta'
                                 size='xl'
-                                textBg='var(--page-bg)'
                                 onClick={() => setIsAction(true)}
                             >
                                 BẮT ĐẦU TẠO

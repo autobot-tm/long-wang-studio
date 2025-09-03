@@ -59,7 +59,6 @@ const buttonVariants = cva(
 type ButtonProps = React.ComponentProps<'button'> &
     VariantProps<typeof buttonVariants> & {
         asChild?: boolean;
-        textBg?: string;
     };
 
 function Button({
@@ -67,25 +66,15 @@ function Button({
     variant,
     size,
     asChild = false,
-    textBg,
     fullMobile,
     children,
     ...props
 }: ButtonProps) {
     const Comp = asChild ? Slot : 'button';
-    const content = textBg ? (
-        <span
-            className='bg-clip-text text-transparent [-webkit-text-fill-color:transparent] leading-[1.15] py-0.5'
-            style={{
-                backgroundImage: textBg,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-            }}
-        >
+    const content = (
+        <span className='flex items-center gap-1 text-[white] leading-[1.15] py-0.5'>
             {children}
         </span>
-    ) : (
-        children
     );
 
     return (
