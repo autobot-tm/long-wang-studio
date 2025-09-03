@@ -51,7 +51,6 @@ export default function LandingTemplate() {
     // 1) Lấy background từ API
     const bgQ = useBackgroundAssets();
     const serverBg = bgQ?.data?.data?.[0]?.url ?? null;
-    const bgSrc = useMemo(() => serverBg ?? DEFAULT_BG, [serverBg]);
 
     // 2) Preload ảnh
     const serverReady = useImageReady(serverBg || '');
@@ -72,14 +71,20 @@ export default function LandingTemplate() {
         else if (i === 1) setPhoto2(url);
     }, []);
 
-    async function handleOpenShare() {
+    const handleOpenShare = useCallback(async () => {
         setIsPreparing(true);
+        const dpr = Math.min(2, Math.max(1.5, window.devicePixelRatio || 1));
         try {
+            await new Promise(r =>
+                'requestIdleCallback' in window
+                    ? (window as any).requestIdleCallback(r)
+                    : setTimeout(r, 0)
+            );
             const dataUrl = apiRef.current?.capture();
             const blob = await apiRef.current?.captureBlob?.({
-                pixelRatio: Math.max(window.devicePixelRatio || 2, 2),
+                pixelRatio: dpr,
                 mimeType: 'image/jpeg',
-                quality: 0.92,
+                quality: 0.9,
             });
             if (!dataUrl || !blob) throw new Error('capture failed');
             const publicUrl = await ensureUploadedUrl(dataUrl, blob);
@@ -88,19 +93,25 @@ export default function LandingTemplate() {
         } finally {
             setIsPreparing(false);
         }
-    }
+    }, []);
+
+    const bgStyle = useMemo(
+        () => ({ backgroundImage: `url('${resolvedBg}')` }),
+        [resolvedBg]
+    );
 
     return (
         <>
             {!appReady && <SplashScreen />}
             <BackgroundProvider
                 as='section'
-                bg={`url('${resolvedBg}')`}
+                bg={resolvedBg}
+                style={bgStyle}
                 paint
                 fixed
                 fadeIn
                 ready={appReady}
-                className='relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden'
+                className='relative min-h-screen w-full flex flex-col'
             >
                 <div className='max-w-6xl w-full px-7 py-12 flex flex-col items-center'>
                     <Logo />
@@ -120,7 +131,7 @@ export default function LandingTemplate() {
 
                     <div className='mt-5 shadow-xl border border-[#AA8143]'>
                         {isAction ? (
-                            <div className='relative width-[800px] height-[800px]'>
+                            <div className='relative w-[800px] h-[800px]'>
                                 <ResponsiveFrame
                                     frameSrc='/images/frame-section.png'
                                     photos={[photo1, photo2]}

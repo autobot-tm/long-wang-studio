@@ -1,8 +1,20 @@
-// share/facebook.ts (client)
+import { toast } from 'sonner';
+
 const BASE =
     typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_BASE_URL
         ? window.location.origin
         : process.env.NEXT_PUBLIC_BASE_URL || '';
+
+async function copyHashtags(tags?: string[]) {
+    const line = normalizeTags(tags)
+        .map(t => `#${t}`)
+        .join(' ');
+    if (!line) return;
+    try {
+        await navigator.clipboard.writeText(line);
+        toast.success('Đã copy hashtag. Hãy dán vào caption.');
+    } catch {}
+}
 
 const isAndroid = () => /Android/i.test(navigator.userAgent);
 const isIOS = () =>
@@ -67,6 +79,7 @@ export async function shareToFacebook(opts: {
 }) {
     if (!opts.imageUrl) throw new Error('imageUrl is required');
 
+    copyHashtags(opts.hashtags);
     const permalink = buildPermalink(toHttps(opts.imageUrl), opts.hashtags);
     const sharer = buildSharer(permalink, opts.hashtags);
 

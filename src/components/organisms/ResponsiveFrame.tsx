@@ -4,11 +4,34 @@ import { BASE_BY_BP, getSlotsForBP } from '@/constants/slot';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { X as XIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CanvasFrameHandle } from './CanvasFrame';
 import PhotoUploader from './PhotoUploader';
 
 const CanvasFrame = dynamic(() => import('./CanvasFrame'), { ssr: false });
+
+const imgCache = new Map<string, Promise<HTMLImageElement>>();
+function preloadImage(src: string) {
+    if (!src) return Promise.resolve(null as any);
+    if (imgCache.has(src)) return imgCache.get(src)!;
+    const p = new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.referrerPolicy = 'no-referrer';
+        img.src = src.startsWith('http')
+            ? src.replace(/^http:/, 'https:')
+            : src;
+        img.decode
+            ? img
+                  .decode()
+                  .then(() => resolve(img))
+                  .catch(() => resolve(img))
+            : (img.onload = () => resolve(img));
+        img.onerror = reject;
+    });
+    imgCache.set(src, p);
+    return p;
+}
 
 export type CaptureOptions = {
     pixelRatio?: number;
@@ -29,16 +52,37 @@ export default function ResponsiveFrame(props: {
     const { frameSrc, photos, setPhoto, onBind } = props;
 
     const bp = useBreakpoint();
-    const base = BASE_BY_BP[bp];
-    const deviceSlots = getSlotsForBP(bp);
+    const base = useMemo(() => BASE_BY_BP[bp], [bp]);
+    const deviceSlots = useMemo(() => getSlotsForBP(bp), [bp]);
+    const containerStyle = useMemo<React.CSSProperties>(
+        () => ({ width: base, height: base }),
+        [base]
+    );
+
     const frameRef = useRef<CanvasFrameHandle>(null);
+    const boundOnce = useRef(false);
+    const [ready, setReady] = useState(false);
 
     useEffect(() => {
-        if (frameRef.current && onBind) onBind(frameRef.current);
-    }, [onBind, base]);
+        let alive = true;
+        setReady(false);
+        preloadImage(frameSrc)
+            .then(() => alive && setReady(true))
+            .catch(() => alive && setReady(true));
+        return () => {
+            alive = false;
+        };
+    }, [frameSrc]);
+
+    useEffect(() => {
+        if (!boundOnce.current && frameRef.current && onBind) {
+            boundOnce.current = true;
+            onBind(frameRef.current);
+        }
+    }, [onBind]);
 
     return (
-        <div className='relative' style={{ width: base, height: base }}>
+        <div className='relative' style={containerStyle}>
             <CanvasFrame
                 ref={frameRef}
                 width={base}
