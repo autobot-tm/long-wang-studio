@@ -217,7 +217,7 @@ export default function ShareDialog({
                             </Layer>
                         </Stage>
 
-                        <div className='absolute inset-x-0 bottom-10 flex justify-center gap-3 z-[5] pointer-events-auto'>
+                        <div className='absolute inset-x-0 bottom-4 flex justify-center gap-3 z-[5] pointer-events-auto'>
                             <Button
                                 variant='cta'
                                 size='xl'

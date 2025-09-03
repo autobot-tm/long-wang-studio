@@ -8,7 +8,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Field } from '../molecules/FieldGroup';
-import RememberMeBlock from '../molecules/RememberMeBlock';
 
 export default function LoginForm({
     fields,
@@ -61,7 +60,7 @@ export default function LoginForm({
                     <AuthTitle>{title}</AuthTitle>
                     <div className='flex flex-col gap-5'>
                         <FieldGroupList fields={fields} />
-                        <RememberMeBlock />
+                        {/* <RememberMeBlock /> */}
                     </div>
                     <ErrorText msg={error} />
                 </div>

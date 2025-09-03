@@ -28,7 +28,7 @@ export default function RegisterForm({
         setLoading(true);
 
         const fd = new FormData(e.currentTarget);
-        const username = String(fd.get('username') ?? '');
+        const email = String(fd.get('email') ?? '');
         const password = String(fd.get('password') ?? '');
         const confirmPassword = String(fd.get('confirmPassword') ?? '');
 
@@ -40,17 +40,21 @@ export default function RegisterForm({
 
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/Auth/register`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password }),
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        fullName: 'admin',
+                    }),
                 }
             );
             if (!res.ok) throw new Error(await res.text());
 
             const s = await signIn('credentials', {
-                username,
+                email,
                 password,
                 redirect: false,
                 callbackUrl,
@@ -58,12 +62,9 @@ export default function RegisterForm({
             if (s?.ok) {
                 router.push(s.url ?? callbackUrl);
                 router.refresh();
-            } else
-                setError(
-                    s?.error ?? 'Đăng ký thành công nhưng đăng nhập thất bại.'
-                );
+            } else setError('Đăng ký thành công nhưng đăng nhập thất bại.');
         } catch (err: any) {
-            setError(err?.message || 'Đăng ký thất bại, vui lòng thử lại.');
+            setError('Đăng ký thất bại, vui lòng thử lại.');
         } finally {
             setLoading(false);
         }

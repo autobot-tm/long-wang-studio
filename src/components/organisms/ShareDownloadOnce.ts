@@ -29,9 +29,7 @@ export async function ensureUploadedUrl(dataUrl: string, blob: Blob) {
         return res.data.url as string;
     } catch (e: any) {
         const msg = e?.message || '';
-        toast.error(
-            `Upload lỗi: ${msg}. iOS có thể do CORS/mixed-content/body-limit. Hãy kiểm Network tab.`
-        );
+        toast.error(`${msg}.`);
         if (e?.name === 'AbortError')
             throw new AppError('ABORTED', 'User aborted');
         if (e?.message?.startsWith?.('HTTP_'))
