@@ -111,11 +111,11 @@ export default function LandingTemplate() {
                 fixed
                 fadeIn
                 ready={appReady}
-                className='relative min-h-screen w-full flex flex-col'
+                className='relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden'
             >
                 <div className='max-w-6xl w-full px-7 py-12 flex flex-col items-center'>
                     <Logo />
-                    <div className='relative w-full max-w-[500px] aspect-[3/1]'>
+                    <div className='relative w-full max-w-[500px] aspect-[4/1]'>
                         <Image
                             src='/images/header.png'
                             alt='header-landing'
@@ -125,13 +125,13 @@ export default function LandingTemplate() {
                             priority
                         />
                     </div>
-                    <p className='text-[20px] md:text-[36px] text-[#AA8143] mt-4 font-gilroy max-w-[70%] md:max-w-[40%] text-center leading-[1.15]'>
+                    <p className='text-[20px] md:text-[36px] text-[#AA8143] font-gilroy max-w-[70%] md:max-w-[450px] text-center leading-[1.15]'>
                         Ngày tái ngộ đáng nhớ từ hoài niệm thân thương
                     </p>
 
                     <div className='mt-5 shadow-xl border border-[#AA8143]'>
                         {isAction ? (
-                            <div className='relative w-[800px] h-[800px]'>
+                            <div className='relative'>
                                 <ResponsiveFrame
                                     frameSrc='/images/frame-section.png'
                                     photos={[photo1, photo2]}
