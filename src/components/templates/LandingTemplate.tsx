@@ -5,7 +5,7 @@ import { useImageReady } from '@/hooks/useImageReady';
 import { ArrowBigRightIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Logo from '../atoms/Logo';
 import BackgroundProvider from '../organisms/BackgroundProvider';
 import { ensureUploadedUrl } from '../organisms/ShareDownloadOnce';
@@ -95,18 +95,12 @@ export default function LandingTemplate() {
         }
     }, []);
 
-    const bgStyle = useMemo(
-        () => ({ backgroundImage: `url('${resolvedBg}')` }),
-        [resolvedBg]
-    );
-
     return (
         <>
             {!appReady && <SplashScreen />}
             <BackgroundProvider
                 as='section'
-                bg={resolvedBg}
-                style={bgStyle}
+                bg={`url('${resolvedBg}')`}
                 paint
                 fixed
                 fadeIn
@@ -114,8 +108,10 @@ export default function LandingTemplate() {
                 className='relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden'
             >
                 <div className='max-w-6xl w-full px-7 py-12 flex flex-col items-center'>
-                    <Logo />
-                    <div className='relative w-full max-w-[500px] aspect-[4/1]'>
+                    <div className='w-[70%] md:w-[40%] flex justify-center'>
+                        <Logo />
+                    </div>
+                    <div className='relative w-full max-w-[600px] aspect-[4/1]'>
                         <Image
                             src='/images/header.png'
                             alt='header-landing'
@@ -125,7 +121,7 @@ export default function LandingTemplate() {
                             priority
                         />
                     </div>
-                    <p className='text-[20px] md:text-[36px] text-[#AA8143] font-gilroy max-w-[70%] md:max-w-[450px] text-center leading-[1.15]'>
+                    <p className='text-[18px] md:text-[28px] text-[#AA8143] font-gilroy max-w-[60%] md:max-w-[450px] text-center leading-[1.3]'>
                         Ngày tái ngộ đáng nhớ từ hoài niệm thân thương
                     </p>
 
@@ -143,8 +139,8 @@ export default function LandingTemplate() {
                             <Image
                                 src='/images/frame-preview.png'
                                 alt='Demo'
-                                width={700}
-                                height={700}
+                                width={650}
+                                height={650}
                                 className='object-cover'
                                 priority
                             />
@@ -182,13 +178,13 @@ export default function LandingTemplate() {
                                 className='text-[#fff]'
                                 onClick={() => setIsAction(true)}
                             >
-                                BẮT ĐẦU TẠO
+                                Bắt đầu tạo
                             </Button>
                         )}
                     </div>
 
-                    <div className='flex gap-6 md:mt-15 mt-10 w-full'>
-                        <p className='md:text-[28px] text-[14px] text-center font-medium text-accent font-gilroy'>
+                    <div className='flex gap-6 md:mt-15 mt-10 sm:w-[full] w-[80%]'>
+                        <p className='md:text-[22px] sm:text-[16px] text-[8px] text-center font-medium text-accent font-gilroy leading-1.3'>
                             Mùa trăng tròn viên mãn là khi được trở về, gặp gỡ
                             những gương mặt thân quen, gửi gắm bao điều tử tế,
                             tốt lành - chúc phúc ngày đoàn viên thêm đong đầy.
