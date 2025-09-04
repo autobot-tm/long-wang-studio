@@ -123,7 +123,7 @@ export default function LandingTemplate() {
                 ready={appReady}
                 className='relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden'
             >
-                <div className='max-w-6xl w-full px-7 py-12 flex flex-col items-center'>
+                <div className='max-w-6xl w-full px-7 py-5 flex flex-col items-center'>
                     <div className='w-[70%] md:w-[40%] flex justify-center'>
                         <Logo />
                     </div>
@@ -137,7 +137,7 @@ export default function LandingTemplate() {
                             priority
                         />
                     </div>
-                    <p className='text-[18px] md:text-[28px] text-[#AA8143] font-gilroy max-w-[60%] md:max-w-[350px] text-center leading-[1.3]'>
+                    <p className='text-[18px] md:text-[28px] text-[#AA8143] font-gilroy max-w-[65%] md:max-w-[350px] text-center leading-[1.3]'>
                         Ngày tái ngộ đáng nhớ từ hoài niệm thân thương
                     </p>
 
@@ -200,7 +200,7 @@ export default function LandingTemplate() {
                         )}
                     </div>
 
-                    <div className='flex gap-6 md:mt-15 mt-10 sm:w-[full] w-[80%]'>
+                    <div className='flex gap-6 md:mt-8 mt-10 sm:w-[full] w-[90%]'>
                         <p className='md:text-[22px] sm:text-[16px] text-[8px] text-center font-medium text-accent font-gilroy leading-1.3'>
                             Mùa trăng tròn viên mãn là khi được trở về, gặp gỡ
                             những gương mặt thân quen, gửi gắm bao điều tử tế,
