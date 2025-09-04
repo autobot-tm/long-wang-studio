@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+    backend:
+        image: nhithien205/longwangbackend:latest
+        container_name: netapp
+        ports:
+            - '5000:5000'
+        environment:
+            - ASPNETCORE_URLS=http://+:5000
+            - ASPNETCORE_ENVIRONMENT=Development
+            - ConnectionStrings__DefaultConnection=Server=db;Database=PicFrame;User Id=sa;Password=YourStrong!Passw0rd123;Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True;
+            - Swagger__Enable=true
+            - DISABLE_HTTPS_REDIRECT=true
+        volumes:
+            - ./uploads:/app/wwwroot/uploads
+            - dp-keys:/root/.aspnet/DataProtection-Keys
+        depends_on:
+            - db
+        restart: always
+        networks:
+            - picframe-net
+
+    frontend:
+        build:
+            context: . # thư mục FE chứa Dockerfile
+            dockerfile: Dockerfile
+        container_name: frontend
+        ports:
+            - '3000:3000'
+        environment:
+            - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+            - NEXT_PUBLIC_API_BASE=/_api
+            - API_SERVER_URL=http://backend:5000
+            - NEXTAUTH_URL=http://localhost:3000
+            - NEXTAUTH_SECRET=local-dev-secret
+            - NODE_ENV=development
+            - BASEPATH=
+        depends_on:
+            - backend
+        restart: always
+        networks:
+            - picframe-net
+
+    db:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        container_name: picframe-db
+        environment:
+            - SA_PASSWORD=YourStrong!Passw0rd123
+            - ACCEPT_EULA=Y
+        ports:
+            - '1433:1433'
+        volumes:
+            - db-data:/var/opt/mssql
+        networks:
+            - picframe-net
+
+volumes:
+    dp-keys:
+    db-data:
+
+networks:
+    picframe-net:

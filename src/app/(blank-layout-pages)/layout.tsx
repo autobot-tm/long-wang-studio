@@ -1,9 +1,12 @@
 import AppQueryProvider from '@/components/providers/query-client';
 import AppSessionProvider from '@/components/providers/session';
+import { authOptions } from '@/libs/auth';
+import { getServerSession } from 'next-auth';
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+const Layout = async ({ children }: { children: React.ReactNode }) => {
+    const session = await getServerSession(authOptions);
     return (
-        <AppSessionProvider>
+        <AppSessionProvider session={session}>
             <AppQueryProvider>{children}</AppQueryProvider>
         </AppSessionProvider>
     );
