@@ -1,20 +1,10 @@
+// utils/share.ts — cập nhật ưu tiên mở app Facebook trên mobile + Web Share với FILE
 import { toast } from 'sonner';
 
 const BASE =
     typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_BASE_URL
         ? window.location.origin
         : process.env.NEXT_PUBLIC_BASE_URL || '';
-
-async function copyHashtags(tags?: string[]) {
-    const line = normalizeTags(tags)
-        .map(t => `#${t}`)
-        .join(' ');
-    if (!line) return;
-    try {
-        await navigator.clipboard.writeText(line);
-        toast.success('Đã copy hashtag. Hãy dán vào caption.');
-    } catch {}
-}
 
 const isAndroid = () => /Android/i.test(navigator.userAgent);
 const isIOS = () =>
@@ -57,6 +47,17 @@ const buildSharer = (permalink: string, tags?: string[]) => {
     return url;
 };
 
+async function copyHashtags(tags?: string[]) {
+    const line = normalizeTags(tags)
+        .map(t => `#${t}`)
+        .join(' ');
+    if (!line) return;
+    try {
+        await navigator.clipboard.writeText(line);
+        toast.success('Đã copy hashtag. Hãy dán vào caption.');
+    } catch {}
+}
+
 function openWithFallback(appUrl: string, webUrl: string, delay = 1000) {
     const t = setTimeout(() => (window.location.href = webUrl), delay);
     if (isIOS()) {
@@ -73,28 +74,55 @@ function openWithFallback(appUrl: string, webUrl: string, delay = 1000) {
     }
 }
 
-export async function shareToFacebook(opts: {
-    imageUrl: string;
+async function fileFromImageUrl(
+    url: string,
+    fileName?: string
+): Promise<File | undefined> {
+    try {
+        const res = await fetch(url, { mode: 'cors', cache: 'no-store' });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const name =
+            fileName || url.split('/').pop() || `image-${Date.now()}.jpg`;
+        return new File([blob], name, { type: blob.type || 'image/jpeg' });
+    } catch {
+        return;
+    }
+}
+
+type ShareOpts = {
+    file?: File;
+    imageUrl?: string;
     hashtags?: string[];
-}) {
-    if (!opts.imageUrl) throw new Error('imageUrl is required');
+    preferApp?: boolean;
+};
 
-    copyHashtags(opts.hashtags);
-    const permalink = buildPermalink(toHttps(opts.imageUrl), opts.hashtags);
-    const sharer = buildSharer(permalink, opts.hashtags);
+export async function shareToFacebook({
+    file,
+    imageUrl,
+    hashtags,
+    preferApp = true,
+}: ShareOpts) {
+    const permalink = imageUrl
+        ? buildPermalink(toHttps(imageUrl), hashtags)
+        : BASE;
+    const sharer = buildSharer(permalink, hashtags);
 
-    if ('share' in navigator && isMobile()) {
+    // MOBILE + FILE → share sheet (Facebook/Save Image)
+    const canFileShare =
+        // @ts-ignore
+        isMobile() && file && navigator?.canShare?.({ files: [file] });
+    if (canFileShare) {
         try {
-            // Chỉ URL, text để trống → tránh lệ thuộc UI share; hashtag đã nằm trong OG
-            await (navigator as any).share({
-                url: permalink,
-                title: 'Chia sẻ ảnh',
-            });
-            return true;
-        } catch {}
+            /* @ts-ignore */ await navigator.share({ files: [file] });
+        } finally {
+            copyHashtags(hashtags);
+        } // chạy sau để không mất user gesture
+        return true;
     }
 
-    if (isAndroid() && isChrome()) {
+    // ANDROID → mở app qua intent
+    if (isAndroid() && isChrome() && preferApp) {
         const intent = `intent://facewebmodal/f?href=${encodeURIComponent(
             sharer
         )}#Intent;scheme=fb;package=com.facebook.katana;S.browser_fallback_url=${encodeURIComponent(
@@ -104,20 +132,19 @@ export async function shareToFacebook(opts: {
         return true;
     }
 
-    if (isMobile()) {
-        const appUrl = `fb://facewebmodal/f?href=${encodeURIComponent(sharer)}`;
-        openWithFallback(appUrl, sharer, 1100);
-        return true;
-    }
-
+    // iOS & các trường hợp khác → mở sharer (universal link)
     const w = 720,
         h = 640;
-    const left = window.screenX + (window.outerWidth - w) / 2;
-    const top = window.screenY + (window.outerHeight - h) / 2;
-    window.open(
-        sharer,
-        'fbshare',
-        `noopener,noreferrer,width=${w},height=${h},left=${left},top=${top}`
-    );
+    isMobile()
+        ? (window.location.href = sharer)
+        : window.open(
+              sharer,
+              'fbshare',
+              `noopener,noreferrer,width=${w},height=${h},left=${
+                  (window.outerWidth - w) / 2
+              },top=${(window.outerHeight - h) / 2}`
+          );
+
+    copyHashtags(hashtags);
     return true;
 }

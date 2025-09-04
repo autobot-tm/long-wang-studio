@@ -151,6 +151,25 @@ export default function ShareDialog({
     const bw = (fit ? fit.w : 0) + BLEED;
     const bh = (fit ? fit.h : 0) + BLEED;
 
+    const makeCompositeFile = useCallback(
+        async (fileName = 'mien-ky-uc.jpg') => {
+            const stage = stageRef.current as
+                | import('konva/lib/Stage').Stage
+                | undefined;
+            if (!stage) return null;
+            const pr = Math.max(1, Math.round(FW / Math.max(1, display.w)));
+            const dataUrl = stage.toDataURL({
+                pixelRatio: pr,
+                mimeType: 'image/jpeg',
+                quality: 0.92,
+            });
+            const res = await fetch(dataUrl);
+            const blob = await res.blob();
+            return new File([blob], fileName, { type: 'image/jpeg' });
+        },
+        [FW, display.w]
+    );
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
@@ -232,12 +251,23 @@ export default function ShareDialog({
                                 variant='cta'
                                 size='xl'
                                 className='text-[#fff]'
-                                onClick={() =>
-                                    shareToFacebook({
-                                        imageUrl: photo,
-                                        hashtags: ['MienKyUc', 'LongWang'],
-                                    })
-                                }
+                                onClick={async () => {
+                                    try {
+                                        const file = await makeCompositeFile(
+                                            'mien-ky-uc.jpg'
+                                        ); // ưu tiên share FILE (app Facebook mở composer ảnh)
+                                        await shareToFacebook({
+                                            file: file ?? undefined,
+                                            imageUrl: photo, // fallback nếu không tạo được file (CORS)
+                                            hashtags: ['MienKyUc', 'LongWang'],
+                                        });
+                                    } catch {
+                                        await shareToFacebook({
+                                            imageUrl: photo,
+                                            hashtags: ['MienKyUc', 'LongWang'],
+                                        });
+                                    }
+                                }}
                             >
                                 Chia sẻ
                             </Button>
