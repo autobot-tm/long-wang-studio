@@ -40,6 +40,7 @@ type CaptureAPI = {
 const DEFAULT_BG = '/images/landing-background.png';
 const DEFAULT_FRAME = '/images/frame-section.png';
 const DEFAULT_POPUP = '/images/frame-share.png';
+const DEFAULT_THEME_PREVIEW = '/images/theme.jpg';
 
 export default function LandingTemplate() {
     const [isAction, setIsAction] = useState(false);
@@ -69,9 +70,7 @@ export default function LandingTemplate() {
     // 2) Preload ảnh
     const serverReady = useImageReady(serverBg || '');
     const headerReady = useImageReady('/images/header.png');
-    const previewReady = useImageReady(
-        '/images/landing-page-frame-preview.png'
-    );
+    const previewReady = useImageReady(DEFAULT_THEME_PREVIEW);
     const frameReady = useImageReady(frameSrc);
     //   const popupReady = useImageReady(popupFrameSrc);
 
@@ -154,7 +153,7 @@ export default function LandingTemplate() {
                             </div>
                         ) : (
                             <Image
-                                src='/images/frame-preview.png'
+                                src={DEFAULT_THEME_PREVIEW}
                                 alt='Demo'
                                 width={650}
                                 height={650}

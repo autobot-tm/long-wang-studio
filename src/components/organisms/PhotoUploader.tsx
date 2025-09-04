@@ -88,13 +88,13 @@ export default function PhotoUploader({
                             <IconImage className='w-3 h-3' />
                             Thêm 01 ảnh
                         </div>
-                        <div className='text-center leading-4 opacity-80 font-gilroy text-[6px] sm:text-[10px] lg:text-[14px]'>
+                        {/* <div className='text-center leading-4 opacity-80 font-gilroy text-[6px] sm:text-[10px] lg:text-[14px]'>
                             định dạng PNG/JPG, tối đa 2&nbsp;MB
                             <br />
                             <span className='text-[#6D6D6D]'>
                                 kích thước cạnh &lt;= 1080px
                             </span>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
