@@ -8,6 +8,7 @@ export type Asset = {
     thumb?: string;
     tags?: string;
     createdAt: string;
+    isPublic: boolean;
 };
 
 // ===== Backgrounds =====
@@ -30,10 +31,11 @@ export async function deleteBackground(id: string) {
 
 // ===== Frames / Popup =====
 export async function listFramesByTag(
-    tag: 'frame' | 'popup'
+    tag: 'frame' | 'popup',
+    includePrivate = true
 ): Promise<Asset[]> {
     const { data } = await axiosClient.get<Asset[]>('/frames/frames', {
-        params: { tags: tag },
+        params: { tags: tag, includePrivate },
     });
     return data;
 }
@@ -47,7 +49,7 @@ export async function uploadFramesWithTag(
         fd.append('file', f);
         fd.append('name', tag);
         fd.append('tags', tag);
-        fd.append('isPublic', 'true');
+        fd.append('isPublic', 'false');
         if (ratio) fd.append('ratio', ratio);
         const { data } = await axiosClient.post<Asset>('/frames/upload', fd);
         return data;
@@ -56,4 +58,7 @@ export async function uploadFramesWithTag(
 }
 export async function deleteFrame(id: string) {
     await axiosClient.delete(`/frames/${id}`);
+}
+export async function selectFrame(id: string) {
+    await axiosClient.post(`/frames/${id}/set-public`);
 }

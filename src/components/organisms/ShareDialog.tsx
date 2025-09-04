@@ -236,7 +236,6 @@ export default function ShareDialog({
                                     shareToFacebook({
                                         imageUrl: photo,
                                         hashtags: ['MienKyUc', 'LongWang'],
-                                        text: 'Chia sẻ khoảnh khắc Miền Ký Ức',
                                     })
                                 }
                             >

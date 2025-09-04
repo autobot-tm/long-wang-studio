@@ -2,6 +2,7 @@
 
 import { useBackgroundAssets } from '@/hooks/useBackgroundAssets';
 import { useImageReady } from '@/hooks/useImageReady';
+import { useTaggedFrames } from '@/hooks/useTaggedFrames';
 import { ArrowBigRightIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
@@ -37,6 +38,8 @@ type CaptureAPI = {
 };
 
 const DEFAULT_BG = '/images/landing-background.png';
+const DEFAULT_FRAME = '/images/frame-section.png';
+const DEFAULT_POPUP = '/images/frame-share.png';
 
 export default function LandingTemplate() {
     const [isAction, setIsAction] = useState(false);
@@ -51,6 +54,17 @@ export default function LandingTemplate() {
     // 1) Lấy background từ API
     const bgQ = useBackgroundAssets();
     const serverBg = bgQ?.data?.data?.[0]?.url ?? null;
+    const framesQ = useTaggedFrames('frame', false); // chỉ public
+    const popupsQ = useTaggedFrames('popup', false); // chỉ public
+
+    const framePublicUrl = framesQ.data?.[0]?.url ?? null;
+    const popupPublicUrl = popupsQ.data?.[0]?.url ?? null;
+
+    const frameSrc = framePublicUrl || DEFAULT_FRAME;
+    const popupFrameSrc = popupPublicUrl || DEFAULT_POPUP;
+
+    console.log('frameSrc', frameSrc);
+    console.log('popupFrameSrc', popupFrameSrc);
 
     // 2) Preload ảnh
     const serverReady = useImageReady(serverBg || '');
@@ -58,13 +72,16 @@ export default function LandingTemplate() {
     const previewReady = useImageReady(
         '/images/landing-page-frame-preview.png'
     );
+    const frameReady = useImageReady(frameSrc);
+    //   const popupReady = useImageReady(popupFrameSrc);
 
     useEffect(() => {
         if (serverBg && serverReady) setResolvedBg(serverBg);
     }, [serverBg, serverReady]);
 
     // App sẵn sàng khi ảnh tĩnh đã sẵn sàng + nếu có serverBg thì chờ preload xong
-    const appReady = headerReady && previewReady && (!serverBg || serverReady);
+    const appReady =
+        headerReady && previewReady && (!serverBg || serverReady) && frameReady;
 
     const handleSetPhoto = useCallback((i: number, url: string | null) => {
         if (i === 0) setPhoto1(url);
@@ -121,7 +138,7 @@ export default function LandingTemplate() {
                             priority
                         />
                     </div>
-                    <p className='text-[18px] md:text-[28px] text-[#AA8143] font-gilroy max-w-[60%] md:max-w-[450px] text-center leading-[1.3]'>
+                    <p className='text-[18px] md:text-[28px] text-[#AA8143] font-gilroy max-w-[60%] md:max-w-[350px] text-center leading-[1.3]'>
                         Ngày tái ngộ đáng nhớ từ hoài niệm thân thương
                     </p>
 
@@ -129,7 +146,7 @@ export default function LandingTemplate() {
                         {isAction ? (
                             <div className='relative'>
                                 <ResponsiveFrame
-                                    frameSrc='/images/frame-section.png'
+                                    frameSrc={frameSrc}
                                     photos={[photo1, photo2]}
                                     setPhoto={handleSetPhoto}
                                     onBind={api => (apiRef.current = api)}
@@ -169,6 +186,7 @@ export default function LandingTemplate() {
                                     photo={sharePhoto || ''}
                                     open={openShare}
                                     onOpenChange={setOpenShare}
+                                    frameSrc={popupFrameSrc}
                                 />
                             </>
                         ) : (

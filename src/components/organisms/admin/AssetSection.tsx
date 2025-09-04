@@ -5,7 +5,8 @@ import { useTaggedFrames } from '@/hooks/useTaggedFrames';
 import { Asset } from '@/services/api/media.service';
 import { Plus, X } from 'lucide-react';
 import Image from 'next/image';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import SectionHeader from '../../molecules/admin/SectionHeader';
 
 export default function AssetSection({
@@ -87,6 +88,20 @@ export default function AssetSection({
     const h = useTaggedFrames(tag);
     const data = h.data ?? [];
 
+    const currentPublicId = useMemo(
+        () => data.find((it: Asset) => it.isPublic)?.id ?? null,
+        [data]
+    );
+    const selectedId = selected ?? currentPublicId;
+    const handleSelect = async (id: string) => {
+        try {
+            await h.select.mutateAsync(id); // gọi API set isPublic = true
+            toast.success('Đã cập nhật thành công');
+        } catch (err) {
+            console.error('Select error', err);
+        }
+    };
+
     const handleDelete = async (id: string) => {
         if (!confirm('Bạn có chắc muốn xoá hình này?')) return;
         await h.remove.mutateAsync(id);
@@ -98,14 +113,16 @@ export default function AssetSection({
             <SectionHeader
                 title={title}
                 hint='Thêm hình ảnh của bạn vào đây và bạn có thể tải lên tối đa 5 file'
-                onChangeClick={() => selected && h.remove.mutate(selected)}
+                onChangeClick={() => {
+                    if (selectedId) handleSelect(selectedId);
+                }}
             />
             <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4'>
                 {data.map((it: Asset) => (
                     <Card
                         key={it.id}
                         className={`group relative overflow-hidden rounded-[20px] border-[#C9B08A] transition hover:ring-2 hover:ring-[#AA8143] ${
-                            selected === it.id ? 'ring-2 ring-[#AA8143]' : ''
+                            selectedId === it.id ? 'ring-2 ring-[#AA8143]' : ''
                         }`}
                         onClick={() => setSelected(it.id)}
                     >
@@ -119,8 +136,8 @@ export default function AssetSection({
                                 handleDelete(it.id);
                             }}
                             className='absolute right-2 top-2 z-10 rounded-full bg-white/90 p-1 shadow
-                         transition hover:bg-white focus:outline-none
-                         opacity-0 group-hover:opacity-100 cursor-pointer'
+                                        transition hover:bg-white focus:outline-none
+                                        opacity-0 group-hover:opacity-100 cursor-pointer'
                         >
                             <X size={16} />
                         </button>
