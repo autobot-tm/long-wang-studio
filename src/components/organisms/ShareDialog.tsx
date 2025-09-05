@@ -253,7 +253,7 @@ export default function ShareDialog({
                                     parentSize={display} // ✅ mở to bằng đúng kích thước ShareDialog
                                 />
                             </div>
-                            <p className='text-[8px] sm:text-[12px] text-[#AA8143] max-w-[90%] md:max-w-[80%]'>
+                            <p className='text-[7px] sm:text-[12px] text-[#AA8143] max-w-[85%] md:max-w-[80%]'>
                                 Quý khách vui lòng tải ảnh về thiết bị và đăng
                                 tải trên nền tảng Facebook ở chế độ Công khai
                                 kèm hashtag #LONGWANG #MienKyUc để nhận 01 Trà

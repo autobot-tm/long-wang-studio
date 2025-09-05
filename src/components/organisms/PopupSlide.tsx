@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState } from 'react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { Keyboard, Navigation, Pagination } from 'swiper/modules';
+import { Keyboard, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 
 type GuideDialogProps = {
@@ -114,7 +114,7 @@ export default function GuideDialog({
 
                         {/* Title */}
                         <div className='relative z-[2] px-4 pt-5 pb-2'>
-                            <h3 className='text-center text-emerald-700 font-bold text-lg sm:text-xl font-gilroy'>
+                            <h3 className='text-center text-emerald-700 font-bold text-[16px] sm:text-xl font-americana'>
                                 {title}
                             </h3>
                         </div>
@@ -129,12 +129,7 @@ export default function GuideDialog({
                                     }}
                                 >
                                     <Swiper
-                                        modules={[
-                                            Navigation,
-                                            Pagination,
-                                            Keyboard,
-                                        ]}
-                                        navigation
+                                        modules={[Pagination, Keyboard]}
                                         pagination={{ clickable: true }}
                                         keyboard={{ enabled: true }}
                                         autoHeight
