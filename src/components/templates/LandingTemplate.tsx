@@ -64,9 +64,6 @@ export default function LandingTemplate() {
     const frameSrc = framePublicUrl || DEFAULT_FRAME;
     const popupFrameSrc = popupPublicUrl || DEFAULT_POPUP;
 
-    console.log('frameSrc', frameSrc);
-    console.log('popupFrameSrc', popupFrameSrc);
-
     // 2) Preload ảnh
     const serverReady = useImageReady(serverBg || '');
     const headerReady = useImageReady('/images/header.png');
@@ -173,7 +170,9 @@ export default function LandingTemplate() {
                                     onClick={handleOpenShare}
                                     className='flex items-center gap-2 [touch-action:manipulation] text-[#fff]'
                                 >
-                                    {isPreparing ? 'Đang chuẩn bị…' : 'Chia sẻ'}
+                                    {isPreparing
+                                        ? 'Đang chuẩn bị…'
+                                        : 'Tiếp tục'}
                                     {!isPreparing && (
                                         <ArrowBigRightIcon
                                             className='w-2 h-2 md:w-4 md:h-4'

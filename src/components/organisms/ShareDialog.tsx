@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { SLOT_SHARE } from '@/constants/slot';
 import { downloadOrOpen } from '@/utils/device';
-import { shareToFacebook } from '@/utils/share';
 import Konva from 'konva';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Group, Image as KImage, Layer, Stage } from 'react-konva';
@@ -217,32 +216,41 @@ export default function ShareDialog({
                             </Layer>
                         </Stage>
 
-                        <div className='absolute inset-x-0 bottom-6 flex justify-center gap-3 z-[5] pointer-events-auto'>
+                        <div className='absolute inset-x-0 bottom-2 flex flex-col items-center justify-center text-center gap-1 z-[5] pointer-events-auto'>
                             <Button
                                 variant='cta'
                                 size='xl'
                                 className='text-[#fff]'
                                 onClick={() =>
-                                    downloadOrOpen(photo, 'mien-ky-uc.jpg')
+                                    downloadOrOpen(photo, 'mien-ky-uc.jpg', [
+                                        'LONGWANG',
+                                        'MienKyUc',
+                                    ])
                                 }
                             >
                                 Tải xuống
                             </Button>
-                            <Button
+                            <p className='text-[8px] sm:text-[12px] text-[#AA8143] max-w-[70%] lg:max-w-[80%]'>
+                                Quý khách vui lòng tải ảnh về thiết bị và đăng
+                                tải trên nền tảng Facebook ở chế độ Công khai
+                                kèm hashtag #LONGWANG #MienKyUc để nhận 01 Trà
+                                Dưỡng Nhan tại nhà hàng
+                            </p>
+                            {/* <Button
                                 variant='cta'
                                 size='xl'
                                 className='text-[#fff]'
                                 onClick={() =>
                                     shareToFacebook({
                                         // imageUrl: photo, // dùng proxy nếu cần tránh CORS
-                                        hashtags: ['MienKyUc', 'LongWang'],
+                                        hashtags: ['MienKyUc', 'LONGWANG'],
                                         iosOpenAppFirst: true, // iOS → mở app trước, bỏ share sheet
                                         preferApp: true,
                                     })
                                 }
                             >
                                 Chia sẻ
-                            </Button>
+                            </Button> */}
                         </div>
                         <div className='h-16' />
                     </div>

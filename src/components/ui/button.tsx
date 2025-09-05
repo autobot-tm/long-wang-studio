@@ -34,7 +34,7 @@ const buttonVariants = cva(
                 lg: 'min-h-[48px] h-12 px-6 text-[clamp(14px,3.6vw,16px)]',
                 xl: [
                     // mobile mặc định nhỏ hơn
-                    'min-h-[32px] h-2 px-6 rounded-full',
+                    'min-h-[24px] h-2 px-6 rounded-full',
                     'text-[10px] sm:text-[14px] md:text-[18px]',
                     // tablet: còn nhỏ hơn nữa
                     'sm:h-8 sm:px-6',
