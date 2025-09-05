@@ -8,6 +8,7 @@ import Konva from 'konva';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Group, Image as KImage, Layer, Stage } from 'react-konva';
 import { Spinner } from '../ui/spinner';
+import GuideDialog from './PopupSlide';
 
 const SLOT_BASE = { w: 960, h: 1280 } as const;
 const isIOS = () =>
@@ -157,6 +158,11 @@ export default function ShareDialog({
                 fitContent
                 centerByGrid
                 showCloseButton
+                // onInteractOutside={e => {
+                //     const el = e.target as HTMLElement;
+                //     if (el?.closest?.('[data-radix-dialog-content]'))
+                //         e.preventDefault();
+                // }}
             >
                 {overlayImg && fit ? (
                     <div
@@ -217,20 +223,37 @@ export default function ShareDialog({
                         </Stage>
 
                         <div className='absolute inset-x-0 bottom-2 flex flex-col items-center justify-center text-center gap-1 z-[5] pointer-events-auto'>
-                            <Button
-                                variant='cta'
-                                size='xl'
-                                className='text-[#fff]'
-                                onClick={() =>
-                                    downloadOrOpen(photo, 'mien-ky-uc.jpg', [
-                                        'LONGWANG',
-                                        'MienKyUc',
-                                    ])
-                                }
-                            >
-                                Tải xuống
-                            </Button>
-                            <p className='text-[8px] sm:text-[12px] text-[#AA8143] max-w-[70%] lg:max-w-[80%]'>
+                            <div className='flex items-center gap-2'>
+                                <Button
+                                    variant='cta'
+                                    size='xl'
+                                    className='text-[#fff]'
+                                    onClick={() =>
+                                        downloadOrOpen(
+                                            photo,
+                                            'mien-ky-uc.jpg',
+                                            ['LONGWANG', 'MienKyUc']
+                                        )
+                                    }
+                                >
+                                    Tải xuống
+                                </Button>
+                                <GuideDialog
+                                    images={[
+                                        '/images/down-img.png',
+                                        '/images/save-img.png',
+                                        '/images/fb-status.png',
+                                    ]}
+                                    captions={[
+                                        'Bước 1: Nhấn nút tải xuống',
+                                        'Bước 2: Nhấn vào ảnh và lưu vào thiết bị',
+                                        'Bước 3: Đăng hình ảnh kèm #LONGWANG #MienKyUc ở chế độ Công khai',
+                                    ]}
+                                    triggerLabel='Xem hướng dẫn'
+                                    parentSize={display} // ✅ mở to bằng đúng kích thước ShareDialog
+                                />
+                            </div>
+                            <p className='text-[8px] sm:text-[12px] text-[#AA8143] max-w-[90%] md:max-w-[80%]'>
                                 Quý khách vui lòng tải ảnh về thiết bị và đăng
                                 tải trên nền tảng Facebook ở chế độ Công khai
                                 kèm hashtag #LONGWANG #MienKyUc để nhận 01 Trà
@@ -252,6 +275,7 @@ export default function ShareDialog({
                                 Chia sẻ
                             </Button> */}
                         </div>
+
                         <div className='h-16' />
                     </div>
                 ) : (
