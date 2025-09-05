@@ -1,4 +1,3 @@
-// components/PopupSlide.tsx (GuideDialog) — khung auto theo ảnh
 'use client';
 import { Button } from '@/components/ui/button';
 import {
@@ -168,10 +167,16 @@ export default function GuideDialog({
                         </div>
 
                         {/* Caption theo slide */}
-                        <div className='absolute bottom-3 left-1/2 -translate-x-1/2 z-[2] w-full px-4'>
-                            <p className='mx-auto max-w-[85%] text-center text-[11px] md:text-sm sm:text-xs text-[#AA8143] font-bold px-2 py-1 font-gilroy'>
-                                {captions[active] ?? ''}
-                            </p>
+                        <div
+                            className={`absolute ${
+                                active === 2 ? 'bottom-2' : 'bottom-4'
+                            } left-1/2 -translate-x-1/2 z-[2] w-full px-4`}
+                        >
+                            <div className='flex justify-center items-center h-full'>
+                                <p className='mx-auto max-w-[85%] text-center text-[11px] md:text-sm sm:text-xs text-[#AA8143] font-bold px-2 py-1 font-gilroy'>
+                                    {captions[active] ?? ''}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

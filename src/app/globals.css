@@ -146,3 +146,17 @@
     color: transparent;
     -webkit-text-fill-color: transparent;
 }
+
+:root {
+    --swiper-theme-color: #aa8143; /* Swiper dùng biến này cho bullet mặc định */
+}
+
+.swiper-pagination-bullet {
+    background-color: #aa8143 !important;
+    opacity: 0.4;
+}
+
+.swiper-pagination-bullet-active {
+    background-color: #2e7d32 !important;
+    opacity: 1;
+}

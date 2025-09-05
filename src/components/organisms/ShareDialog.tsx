@@ -222,7 +222,7 @@ export default function ShareDialog({
                             </Layer>
                         </Stage>
 
-                        <div className='absolute inset-x-0 bottom-2 flex flex-col items-center justify-center text-center gap-1 z-[5] pointer-events-auto'>
+                        <div className='absolute inset-x-0 sm:bottom-7 bottom-2 flex flex-col items-center justify-center text-center gap-1 z-[5] pointer-events-auto'>
                             <div className='flex items-center gap-2'>
                                 <Button
                                     variant='cta'
@@ -245,7 +245,7 @@ export default function ShareDialog({
                                         '/images/fb-status.png',
                                     ]}
                                     captions={[
-                                        'Bước 1: Nhấn nút tải xuống',
+                                        'Bước 1: Nhấn nút "Tải xuống"',
                                         'Bước 2: Nhấn vào ảnh và lưu vào thiết bị',
                                         'Bước 3: Đăng hình ảnh kèm #LONGWANG #MienKyUc ở chế độ Công khai',
                                     ]}
