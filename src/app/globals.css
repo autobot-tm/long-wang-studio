@@ -148,15 +148,37 @@
 }
 
 :root {
-    --swiper-theme-color: #aa8143; /* Swiper dùng biến này cho bullet mặc định */
+    --swiper-theme-color: white; /* Swiper dùng biến này cho bullet mặc định */
 }
 
 .swiper-pagination-bullet {
-    background-color: #aa8143 !important;
+    background-color: white !important;
     opacity: 0.4;
 }
 
 .swiper-pagination-bullet-active {
-    background-color: #2e7d32 !important;
+    background-color: white !important;
     opacity: 1;
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+    width: 16px; /* thu nhỏ khung nút */
+    height: 16px;
+    color: #6f4e1e !important; /* đổi màu icon (theo theme của anh) */
+    scale: 0.7; /* co nhỏ icon lại */
+    transition: color 0.2s ease, scale 0.2s ease;
+}
+
+/* hover: đậm màu hơn */
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+    color: #6f4e1e; /* màu nâu đậm hơn khi hover */
+    scale: 0.85;
+}
+
+/* nếu muốn nền tròn mờ */
+.swiper-button-prev::after,
+.swiper-button-next::after {
+    font-size: 16px; /* icon nhỏ lại (mặc định 20–24px) */
 }

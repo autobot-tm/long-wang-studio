@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from 'react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { Keyboard, Pagination } from 'swiper/modules';
+import { Keyboard, Navigation, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 
 type GuideDialogProps = {
@@ -128,7 +128,12 @@ export default function GuideDialog({
                                     }}
                                 >
                                     <Swiper
-                                        modules={[Pagination, Keyboard]}
+                                        modules={[
+                                            Pagination,
+                                            Keyboard,
+                                            Navigation,
+                                        ]}
+                                        navigation
                                         pagination={{ clickable: true }}
                                         keyboard={{ enabled: true }}
                                         autoHeight
