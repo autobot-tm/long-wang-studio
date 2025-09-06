@@ -1,4 +1,3 @@
-// app/share/page.tsx
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -39,7 +38,6 @@ export async function generateMetadata({
     }`;
 
     const title = `Chia sẻ khoảnh khắc Miền Ký Ức`;
-    // OG description chèn nhiều hashtag (giới hạn độ dài để tránh bị cắt)
     const descBase = 'Long Wang Studio';
     const ogDesc = (descBase + (hashLine ? ` · ${hashLine}` : '')).slice(
         0,

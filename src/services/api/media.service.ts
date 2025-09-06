@@ -29,7 +29,6 @@ export async function deleteBackground(id: string) {
     await axiosClient.delete(`/backgrounds/${id}`);
 }
 
-// ===== Frames / Popup =====
 export async function listFramesByTag(
     tag: 'frame' | 'popup',
     includePrivate = true

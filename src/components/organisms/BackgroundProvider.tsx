@@ -8,8 +8,8 @@ type Props<T extends React.ElementType = 'div'> = {
     fixed?: boolean;
     className?: string;
     children: React.ReactNode;
-    fadeIn?: boolean; // NEW: bật fade-in
-    ready?: boolean; // NEW: trạng thái đã tải ảnh
+    fadeIn?: boolean;
+    ready?: boolean;
 } & Omit<React.ComponentPropsWithoutRef<T>, 'as' | 'children' | 'className'>;
 
 export default function BackgroundProvider<

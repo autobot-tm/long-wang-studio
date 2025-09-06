@@ -53,7 +53,7 @@ const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
 
         useEffect(() => {
             const pr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
-            Konva.pixelRatio = pr; // tạo canvas 2x nhưng hệ toạ độ giữ nguyên
+            Konva.pixelRatio = pr;
             const stage = stageRef.current;
             if (stage) {
                 stage
@@ -124,7 +124,6 @@ const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
                     c.width = s.width;
                     c.height = s.height;
                     const ctx = c.getContext('2d')!;
-                    // ✅ tăng chất lượng nội suy
                     (ctx as any).imageSmoothingEnabled = true;
                     (ctx as any).imageSmoothingQuality = 'high';
                     ctx.drawImage(img, fit.x, fit.y, fit.w, fit.h);
@@ -142,9 +141,9 @@ const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
                 scaleX={stageScale}
                 scaleY={stageScale}
                 style={{
-                    width: width * stageScale, // ✅ DOM co theo container (w)
-                    height: height * stageScale, // ✅
-                    display: 'block', // tránh inline gap
+                    width: width * stageScale,
+                    height: height * stageScale,
+                    display: 'block',
                 }}
             >
                 <Layer listening={false}>

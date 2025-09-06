@@ -21,7 +21,7 @@ type GuideDialogProps = {
     title?: string;
     triggerLabel?: string;
     bgUrl?: string;
-    parentSize?: { w: number; h: number }; // nhận từ ShareDialog
+    parentSize?: { w: number; h: number };
 };
 
 type Dim = { w: number; h: number };
@@ -38,7 +38,6 @@ export default function GuideDialog({
     const [active, setActive] = useState(0);
     const [dims, setDims] = useState<Dim[]>([]);
 
-    // preload ảnh để lấy đúng kích thước gốc
     useEffect(() => {
         Promise.all(
             images.map(
@@ -67,7 +66,7 @@ export default function GuideDialog({
         return { w: Math.round(960 * s), h: Math.round(1280 * s) };
     }, [parentSize]);
 
-    const maxW = Math.round(size.w * 0.8); // khung tối đa chiếm 80% chiều rộng dialog
+    const maxW = Math.round(size.w * 0.8);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -87,7 +86,6 @@ export default function GuideDialog({
                 showCloseButton={false}
                 overlayClassName='bg-black/50 backdrop-blur-sm'
             >
-                {/* Nền dialog */}
                 <div
                     className='relative mx-auto'
                     style={{ width: size.w, maxWidth: '92vw' }}
@@ -118,7 +116,6 @@ export default function GuideDialog({
                             </h3>
                         </div>
 
-                        {/* KHUNG ẢNH: khớp tỉ lệ ảnh, không ép 9:16 */}
                         <div className='relative z-[2] w-full flex justify-center pb-15'>
                             <div className='w-full flex justify-center'>
                                 <div
@@ -146,7 +143,6 @@ export default function GuideDialog({
                                             return (
                                                 <SwiperSlide key={i}>
                                                     <div className='w-full flex justify-center bg-white'>
-                                                        {/* width/height giữ đúng tỉ lệ, CSS scale theo chiều ngang */}
                                                         <Image
                                                             src={src}
                                                             alt={`Slide ${
@@ -171,7 +167,6 @@ export default function GuideDialog({
                             </div>
                         </div>
 
-                        {/* Caption theo slide */}
                         <div
                             className={`absolute ${
                                 active === 2 ? 'bottom-2' : 'bottom-4'

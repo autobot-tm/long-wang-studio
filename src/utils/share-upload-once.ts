@@ -24,14 +24,11 @@ async function digestSHA1(buf: ArrayBuffer): Promise<string | null> {
 }
 
 export async function hashPhoto(src: string): Promise<string> {
-    // Chỉ chạy client
     if (typeof window === 'undefined') return 'srv';
-    // Lấy blob từ ảnh (data: URL hoặc HTTP/blob:)
     const resp = await fetch(src);
     const blob = await resp.blob();
     const buf = await blob.arrayBuffer();
 
-    // Ưu tiên SHA-1, fallback FNV-1a
     const sha1 = await digestSHA1(buf);
     return sha1 ?? `fnv_${fnv1a(buf)}`;
 }

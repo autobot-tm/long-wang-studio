@@ -18,7 +18,7 @@ export default function MaskedIcon({
     const maskUrl = useMemo(() => {
         const svg = renderToStaticMarkup(
             <Icon size={24} strokeWidth={strokeWidth} fill='#F6F2D7' />
-        ); // 24px chuẩn; mask sẽ scale theo CSS box
+        );
         return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
     }, [Icon, strokeWidth]);
 

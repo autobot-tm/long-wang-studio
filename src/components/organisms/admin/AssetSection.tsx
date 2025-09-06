@@ -32,19 +32,17 @@ export default function AssetSection({
             if (!f || changing) return;
             setChanging(true);
             const preview = URL.createObjectURL(f);
-            onPickBg?.(preview); // optimistic UI
+            onPickBg?.(preview);
             try {
                 const prevId = current?.id;
                 if (prevId) await bg.remove.mutateAsync(prevId);
                 const uploaded: Asset | void = await bg.uploadNew.mutateAsync(
                     f
                 );
-                // nếu API trả url mới, thay ngay để rồi mới revoke preview
                 if ((uploaded as any)?.url) onPickBg?.((uploaded as any).url);
             } catch {
                 onPickBg?.(currentUrl);
             } finally {
-                // trì hoãn revoke để tránh ERR FILE NOT FOUND khi <Image> còn render blob:
                 setTimeout(() => URL.revokeObjectURL(preview), 1500);
                 setChanging(false);
             }
@@ -76,7 +74,7 @@ export default function AssetSection({
                             fill
                             sizes='100vw'
                             className='object-cover object-center'
-                            unoptimized={isTemp} // cho blob:/data:
+                            unoptimized={isTemp}
                         />
                     </div>
                 </div>

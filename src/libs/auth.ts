@@ -57,7 +57,6 @@ export const authOptions: NextAuthOptions = {
                         }
                     );
 
-                    // Log nhẹ nhàng khi backend trả lỗi domain (success=false)
                     if (!resp?.success) {
                         console.warn('[Auth] domain-error', { url, resp });
                         return null;
@@ -86,18 +85,15 @@ export const authOptions: NextAuthOptions = {
                         };
                         console.error('[Auth] axios-error', info);
 
-                        // Sai thông tin đăng nhập / không có quyền → trả null
                         if (
                             err.response &&
                             [401, 403].includes(err.response.status)
                         )
                             return null;
 
-                        // Lỗi khác → ném ra để NextAuth chuyển hướng error page
                         throw new Error(`LoginFailed:${info.status}`);
                     }
 
-                    // Non-axios error
                     console.error('[Auth] unknown-error', {
                         message: (error as Error).message,
                     });
@@ -108,7 +104,6 @@ export const authOptions: NextAuthOptions = {
     ],
     callbacks: {
         async jwt({ token, user }) {
-            // Lúc login: map đầy đủ và clear error
             if (user) {
                 token.userId = (user as any).id;
                 token.accessToken = (user as any).accessToken;
@@ -119,25 +114,20 @@ export const authOptions: NextAuthOptions = {
             }
 
             const exp = Number(token.accessTokenExpires ?? 0);
-            // Nếu chưa có exp hợp lệ → giữ nguyên, đừng refresh bừa
             if (!exp || Number.isNaN(exp)) return token;
 
-            // Chỉ refresh khi SẮP hết hạn (còn < 60s)
             const now = Date.now();
             if (now < exp - 60_000) return token;
 
-            // Không có refreshToken thì không refresh
             if (!token.refreshToken) return token;
 
             const next = await refreshAccessToken(token);
-            // Ghi log server để kiểm tra nhánh đang chạy
             if ((next as any).error) {
                 console.warn('[JWT] refresh failed -> keep old token', {
                     now,
                     exp,
                     diff: exp - now,
                 });
-                // KHÔNG xoá accessToken hiện tại, chỉ gắn error để UI biết
                 return { ...token, error: 'RefreshAccessTokenError' };
             }
             return next;

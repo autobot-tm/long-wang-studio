@@ -71,8 +71,6 @@ export default function ShareDialog({
 
     const FW = frameImg?.naturalWidth ?? SLOT_BASE.w;
     const FH = frameImg?.naturalHeight ?? SLOT_BASE.h;
-
-    // Tính kích thước hiển thị (không scale Stage bằng transform)
     const [display, setDisplay] = useState({ w: FW, h: FH });
     useEffect(() => {
         const calc = () => {
@@ -100,18 +98,15 @@ export default function ShareDialog({
         };
     }, [FW, FH]);
 
-    // DPR an toàn (nét nhưng không bể canvas trên iOS)
     const DPR = useMemo(() => {
         const dev =
             typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
         return isIOS() ? Math.min(2, dev) : Math.min(3, dev);
     }, []);
     useEffect(() => {
-        // ảnh hưởng export & hit-canvas; Konva tự nhân DPR nội bộ
         Konva.pixelRatio = DPR;
     }, [DPR]);
 
-    // Root group scale theo tỷ lệ hiển thị để giữ toạ độ base chuẩn
     const rootScaleX = display.w / FW;
     const rootScaleY = display.h / FH;
 
@@ -158,11 +153,6 @@ export default function ShareDialog({
                 fitContent
                 centerByGrid
                 showCloseButton
-                // onInteractOutside={e => {
-                //     const el = e.target as HTMLElement;
-                //     if (el?.closest?.('[data-radix-dialog-content]'))
-                //         e.preventDefault();
-                // }}
             >
                 {overlayImg && fit ? (
                     <div
@@ -259,21 +249,6 @@ export default function ShareDialog({
                                 kèm hashtag #LONGWANG #MienKyUc để nhận 01 Trà
                                 Dưỡng Nhan tại nhà hàng
                             </p>
-                            {/* <Button
-                                variant='cta'
-                                size='xl'
-                                className='text-[#fff]'
-                                onClick={() =>
-                                    shareToFacebook({
-                                        // imageUrl: photo, // dùng proxy nếu cần tránh CORS
-                                        hashtags: ['MienKyUc', 'LONGWANG'],
-                                        iosOpenAppFirst: true, // iOS → mở app trước, bỏ share sheet
-                                        preferApp: true,
-                                    })
-                                }
-                            >
-                                Chia sẻ
-                            </Button> */}
                         </div>
 
                         <div className='h-16' />

@@ -53,10 +53,6 @@ export const SLOT_VECTORS: Partial<Record<BP, Slot[]>> = {
     //         scale: 0.68,
     //     },
     // ],
-
-    // ❖ Ví dụ: nếu anh có vector riêng cho tablet & desktop, điền vào đây:
-    // tablet: [ ... ],
-    // desktop: [ ... ],
 };
 
 const scaleSlots = (src: Slot[], ratio: number): Slot[] =>

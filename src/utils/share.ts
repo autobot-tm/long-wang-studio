@@ -19,7 +19,6 @@ const hashLine = (tags?: string[]) =>
         .map(t => `#${t}`)
         .join(' ');
 
-// ---- COPY HELPERS (ưu tiên đồng bộ để giữ user-gesture trên mobile) ----
 function copyUsingTextarea(text: string) {
     try {
         const ta = document.createElement('textarea');
@@ -48,11 +47,9 @@ async function copyAndroid(line: string) {
     return copyUsingTextarea(line);
 }
 
-// iOS: chỉ dùng sync textarea
 function copyIOS(line: string) {
     return copyUsingTextarea(line);
 }
-// ---- OPEN FACEBOOK ----
 function openIOS(timeout = 1200) {
     const app = `fb://feed`;
     const fallback = 'https://m.facebook.com/';
@@ -106,7 +103,7 @@ export async function shareToFacebook({
         }
         if (isAndroid()) {
             let ok = false;
-            if (line) ok = await copyAndroid(line); // đảm bảo ghi xong rồi mới mở app
+            if (line) ok = await copyAndroid(line);
             if (ok) toast.success('Đã copy hashtag. Hãy dán vào caption.');
             openFacebookAndroid(); // intent://feed …
             return true;
@@ -119,9 +116,7 @@ export async function shareToFacebook({
         try {
             await navigator.clipboard.writeText(line);
             toast.success('Đã copy hashtag. Hãy dán vào caption.');
-        } catch {
-            /* optionally: fallback execCommand here */
-        }
+        } catch {}
     }
     return true;
 }

@@ -1,4 +1,3 @@
-// hooks/useBreakpoint.ts
 'use client';
 import { useEffect, useState } from 'react';
 export type BP = 'mobile' | 'tablet' | 'desktop';

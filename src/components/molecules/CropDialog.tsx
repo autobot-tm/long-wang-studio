@@ -80,9 +80,7 @@ export default function CropDialog({
             i.onerror = reject;
         });
 
-        // area: px của vùng crop trên ảnh gốc
         const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
-        // Nếu không truyền, mặc định xuất đúng kích thước crop * DPR
         const targetW = Math.round((outWidth ?? area.width) * dpr);
         const targetH = Math.round((outHeight ?? area.height) * dpr);
 
@@ -90,13 +88,11 @@ export default function CropDialog({
         c.width = targetW;
         c.height = targetH;
         const ctx = c.getContext('2d')!;
-        // nội suy mượt
         // @ts-ignore
         ctx.imageSmoothingEnabled = true;
         // @ts-ignore
         ctx.imageSmoothingQuality = 'high';
 
-        // Vẽ từ ảnh gốc (sx,sy,sw,sh) => (0,0,targetW,targetH)
         ctx.drawImage(
             img,
             area.x,

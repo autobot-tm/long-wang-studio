@@ -52,11 +52,10 @@ export default function LandingTemplate() {
     const [resolvedBg, setResolvedBg] = useState(DEFAULT_BG);
     const apiRef = useRef<CaptureAPI | null>(null);
 
-    // 1) Lấy background từ API
     const bgQ = useBackgroundAssets();
     const serverBg = bgQ?.data?.data?.[0]?.url ?? null;
-    const framesQ = useTaggedFrames('frame', false); // chỉ public
-    const popupsQ = useTaggedFrames('popup', false); // chỉ public
+    const framesQ = useTaggedFrames('frame', false);
+    const popupsQ = useTaggedFrames('popup', false);
 
     const framePublicUrl = framesQ.data?.[0]?.url ?? null;
     const popupPublicUrl = popupsQ.data?.[0]?.url ?? null;
@@ -64,18 +63,15 @@ export default function LandingTemplate() {
     const frameSrc = framePublicUrl || DEFAULT_FRAME;
     const popupFrameSrc = popupPublicUrl || DEFAULT_POPUP;
 
-    // 2) Preload ảnh
     const serverReady = useImageReady(serverBg || '');
     const headerReady = useImageReady('/images/header.png');
     const previewReady = useImageReady(DEFAULT_THEME_PREVIEW);
     const frameReady = useImageReady(frameSrc);
-    //   const popupReady = useImageReady(popupFrameSrc);
 
     useEffect(() => {
         if (serverBg && serverReady) setResolvedBg(serverBg);
     }, [serverBg, serverReady]);
 
-    // App sẵn sàng khi ảnh tĩnh đã sẵn sàng + nếu có serverBg thì chờ preload xong
     const appReady =
         headerReady && previewReady && (!serverBg || serverReady) && frameReady;
 

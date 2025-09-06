@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     eslint: { ignoreDuringBuilds: true },
     typescript: { ignoreBuildErrors: true },
     images: {
-        unoptimized: true, // đảm bảo ảnh trong /public hiển thị đúng
+        unoptimized: true,
         remotePatterns: [
             {
                 protocol: 'http',

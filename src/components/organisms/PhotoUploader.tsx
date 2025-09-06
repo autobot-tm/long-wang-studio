@@ -19,10 +19,10 @@ export default function PhotoUploader({
     onSet,
     scale = 1,
 }: {
-    slot: Slot; // ⚠️ x,y đã nhân scale ở parent
+    slot: Slot;
     index: number;
     onSet: (i: number, url: string) => void;
-    scale?: number; // scale toàn bộ UI uploader
+    scale?: number;
 }) {
     const [file, setFile] = useState<File | null>(null);
     const [open, setOpen] = useState(false);
@@ -31,7 +31,7 @@ export default function PhotoUploader({
         () => Math.min(2, Math.max(1, window.devicePixelRatio || 1)),
         []
     );
-    const outW = Math.round(slot.width * dpr); // có thể *1.5 nếu muốn sắc hơn
+    const outW = Math.round(slot.width * dpr);
     const outH = Math.round(slot.height * dpr);
 
     const onDrop = useCallback((files: File[]) => {
@@ -95,13 +95,6 @@ export default function PhotoUploader({
                             <IconImage className='w-3 h-3' />
                             Thêm 01 ảnh
                         </div>
-                        {/* <div className='text-center leading-4 opacity-80 font-gilroy text-[6px] sm:text-[10px] lg:text-[14px]'>
-                            định dạng PNG/JPG, tối đa 2&nbsp;MB
-                            <br />
-                            <span className='text-[#6D6D6D]'>
-                                kích thước cạnh &lt;= 1080px
-                            </span>
-                        </div> */}
                     </div>
                 </div>
             </div>
