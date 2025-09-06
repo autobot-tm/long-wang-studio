@@ -10,7 +10,12 @@ import { Slider } from '@/components/ui/slider';
 import { useEffect, useMemo, useState } from 'react';
 import Cropper from 'react-easy-crop';
 
-type CropArea = { width: number; height: number; x: number; y: number };
+type CropArea = {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+};
 const useIsMobile = () => {
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
     const isTouch =
@@ -25,12 +30,16 @@ export default function CropDialog({
     onClose,
     onDone,
     aspect = 1,
+    outWidth,
+    outHeight,
 }: {
     open: boolean;
     file: File | null;
     onClose: () => void;
     onDone: (url: string) => void;
     aspect?: number;
+    outWidth?: number;
+    outHeight?: number;
 }) {
     const isMobile = useIsMobile();
     const allowRotate = !isMobile;
@@ -71,25 +80,38 @@ export default function CropDialog({
             i.onerror = reject;
         });
 
-        const { width, height, x, y } = area;
+        // area: px của vùng crop trên ảnh gốc
+        const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+        // Nếu không truyền, mặc định xuất đúng kích thước crop * DPR
+        const targetW = Math.round((outWidth ?? area.width) * dpr);
+        const targetH = Math.round((outHeight ?? area.height) * dpr);
+
         const c = document.createElement('canvas');
+        c.width = targetW;
+        c.height = targetH;
         const ctx = c.getContext('2d')!;
-        c.width = Math.round(width);
-        c.height = Math.round(height);
-        const rotation = allowRotate ? rot : 0;
-        if (rotation) {
-            ctx.translate(c.width / 2, c.height / 2);
-            ctx.rotate((rotation * Math.PI) / 180);
-            ctx.translate(-c.width / 2, -c.height / 2);
-        }
+        // nội suy mượt
         // @ts-ignore
         ctx.imageSmoothingEnabled = true;
+        // @ts-ignore
         ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, x, y, width, height, 0, 0, c.width, c.height);
+
+        // Vẽ từ ảnh gốc (sx,sy,sw,sh) => (0,0,targetW,targetH)
+        ctx.drawImage(
+            img,
+            area.x,
+            area.y,
+            area.width,
+            area.height,
+            0,
+            0,
+            targetW,
+            targetH
+        );
+
         onDone(c.toDataURL('image/jpeg', 0.92));
         setSubmitting(false);
     }
-
     return (
         <Dialog open={open} onOpenChange={v => !v && onClose()}>
             <DialogContent

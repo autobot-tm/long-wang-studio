@@ -1,7 +1,7 @@
 'use client';
 import clsx from 'clsx';
 import { Image as IconImage } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import CropDialog from '../molecules/CropDialog';
 
@@ -26,6 +26,13 @@ export default function PhotoUploader({
 }) {
     const [file, setFile] = useState<File | null>(null);
     const [open, setOpen] = useState(false);
+
+    const dpr = useMemo(
+        () => Math.min(2, Math.max(1, window.devicePixelRatio || 1)),
+        []
+    );
+    const outW = Math.round(slot.width * dpr); // có thể *1.5 nếu muốn sắc hơn
+    const outH = Math.round(slot.height * dpr);
 
     const onDrop = useCallback((files: File[]) => {
         const f = files?.[0];
@@ -108,6 +115,8 @@ export default function PhotoUploader({
                     onSet(index, url);
                     setOpen(false);
                 }}
+                outWidth={outW} // NEW
+                outHeight={outH}
             />
         </>
     );

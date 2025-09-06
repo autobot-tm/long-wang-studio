@@ -95,9 +95,9 @@ export default function LandingTemplate() {
             );
             const dataUrl = apiRef.current?.capture();
             const blob = await apiRef.current?.captureBlob?.({
-                pixelRatio: dpr,
+                pixelRatio: 2,
                 mimeType: 'image/jpeg',
-                quality: 0.9,
+                quality: 0.92,
             });
             if (!dataUrl || !blob) throw new Error('capture failed');
             const publicUrl = await ensureUploadedUrl(dataUrl, blob);

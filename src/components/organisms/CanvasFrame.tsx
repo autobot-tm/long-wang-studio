@@ -1,4 +1,5 @@
 'use client';
+import Konva from 'konva';
 import {
     forwardRef,
     useEffect,
@@ -51,6 +52,18 @@ const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
         const [imgs, setImgs] = useState<(HTMLImageElement | null)[]>([]);
 
         useEffect(() => {
+            const pr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+            Konva.pixelRatio = pr; // tạo canvas 2x nhưng hệ toạ độ giữ nguyên
+            const stage = stageRef.current;
+            if (stage) {
+                stage
+                    .getLayers()
+                    .forEach((l: any) => l.getCanvas().setPixelRatio(pr));
+                stage.draw();
+            }
+        }, []);
+
+        useEffect(() => {
             const i = new Image();
             if (/^https?:/i.test(frameSrc)) i.crossOrigin = 'anonymous';
             i.src = frameSrc;
@@ -80,26 +93,18 @@ const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
             () => ({
                 capture: () => {
                     stageRef.current?.batchDraw();
-                    const pr = 1 / (stageScale || 1);
                     return (
-                        stageRef.current?.toDataURL({ pixelRatio: pr }) ?? null
+                        stageRef.current?.toDataURL({
+                            pixelRatio: 1 / (stageScale || 1),
+                        }) ?? null
                     );
                 },
-                captureBlob: async (opts?: CaptureOptions) => {
+                captureBlob: async opts => {
                     stageRef.current?.batchDraw();
-
-                    const pr =
-                        (opts?.pixelRatio ??
-                            (typeof window !== 'undefined'
-                                ? window.devicePixelRatio || 2
-                                : 2)) / (stageScale || 1);
-                    const mime = opts?.mimeType ?? 'image/jpeg';
-                    const quality = opts?.quality ?? 0.92;
-
                     const uri = stageRef.current?.toDataURL({
-                        pixelRatio: pr,
-                        mimeType: mime,
-                        quality,
+                        pixelRatio: (opts?.pixelRatio ?? 2) / (stageScale || 1),
+                        mimeType: opts?.mimeType ?? 'image/jpeg',
+                        quality: opts?.quality ?? 0.92,
                     });
                     if (!uri) return null;
                     const res = await fetch(uri);
@@ -142,7 +147,7 @@ const CanvasFrame = forwardRef<CanvasFrameHandle, Props>(
                     display: 'block', // tránh inline gap
                 }}
             >
-                <Layer>
+                <Layer listening={false}>
                     {frameImg && (
                         <KImage
                             image={frameImg}

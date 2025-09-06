@@ -50,7 +50,7 @@ export default function ResponsiveFrame(props: {
     }) => void;
 }) {
     const { frameSrc, photos, setPhoto, onBind } = props;
-
+    const [dpr, setDpr] = useState(1);
     const bp = useBreakpoint();
     const base = useMemo(() => BASE_BY_BP[bp], [bp]);
     const deviceSlots = useMemo(() => getSlotsForBP(bp), [bp]);
@@ -80,6 +80,20 @@ export default function ResponsiveFrame(props: {
             onBind(frameRef.current);
         }
     }, [onBind]);
+
+    useEffect(() => {
+        const on = () =>
+            setDpr(Math.min(2, Math.max(1, window.devicePixelRatio || 1)));
+        on();
+        window.addEventListener('resize', on, { passive: true });
+        window.visualViewport?.addEventListener('resize', on, {
+            passive: true,
+        });
+        return () => {
+            window.removeEventListener('resize', on);
+            window.visualViewport?.removeEventListener('resize', on);
+        };
+    }, []);
 
     return (
         <div className='relative' style={containerStyle}>
