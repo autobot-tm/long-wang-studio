@@ -75,7 +75,7 @@ export default function GuideDialog({
                 <Button
                     variant={'ghost'}
                     size={'xl'}
-                    className='text-[#AA8143]'
+                    className='text-[#AA8143] border border-[#AA8143] hover:bg-[#AA8143] hover:text-white'
                 >
                     {triggerLabel}
                 </Button>
